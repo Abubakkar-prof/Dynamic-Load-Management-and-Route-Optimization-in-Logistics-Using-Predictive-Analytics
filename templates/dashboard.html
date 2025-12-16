@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Logistics AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    #map {
+        height: 500px;
+        border-radius: 12px;
+        z-index: 1;
+    }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Overview</h2>
+        <p class="text-muted mb-0">Real-time fleet monitoring and demand forecasting.</p>
+    </div>
+    <a href="{{ url_for('orders.list_orders') }}" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold">
+        <i class="fas fa-box me-2"></i>Manage Orders
+    </a>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100 p-4">
+            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Predicted Demand (7 Days)</div>
+            <div class="stat-value" id="forecast-vol">-</div>
+            <div class="text-success small mt-2"><i class="fas fa-arrow-up me-1"></i>High Confidence</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 p-4">
+            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Active Fleet</div>
+            <div class="stat-value" id="active-fleet">-</div>
+            <div class="text-muted small mt-2">Vehicles Available</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 p-4">
+            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Fleet Capacity</div>
+            <div class="stat-value" id="fleet-cap">-</div>
+            <div class="text-muted small mt-2">Total Kg Capacity</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 p-4">
+            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Pending Orders</div>
+            <div class="stat-value" id="pending-orders">-</div>
+            <div class="text-muted small mt-2">Awaiting Assignment</div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Grid -->
+<div class="row g-4">
+    <!-- Chart Section -->
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h6 class="card-title mb-4" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Demand Forecast</h6>
+            <canvas id="demandChart"></canvas>
+            
+            <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
+                <h6 class="card-title mb-3" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Recent Alerts</h6>
+                <div class="d-flex align-items-start mb-3">
+                    <div class="bg-warning bg-opacity-10 p-2 rounded me-3 text-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <div class="small fw-bold">High Demand in North Region</div>
+                        <div class="text-muted small" style="font-size: 0.8rem;">Predicted 20% spike tomorrow.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Section -->
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h6 class="card-title mb-4" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Quick Stats</h6>
+            
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Today's Orders</span>
+                    <strong id="today-orders">-</strong>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 70%;" id="today-progress"></div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Fleet Utilization</span>
+                    <strong id="fleet-util">-</strong>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" id="util-progress"></div>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
+                <h6 class="card-title mb-3" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">System Status</h6>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-circle text-success me-2" style="font-size: 0.5rem;"></i>
+                    <span class="small">Database: Connected</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-circle text-success me-2" style="font-size: 0.5rem;"></i>
+                    <span class="small">ML Model: Active</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-circle text-warning me-2" style="font-size: 0.5rem;"></i>
+                    <span class="small">Route Optimizer: Offline</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load Stats
+fetch('/api/stats')
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('forecast-vol').textContent = data.forecast_volume || '0';
+        document.getElementById('active-fleet').textContent = data.active_vehicles || '0';
+        document.getElementById('fleet-cap').textContent = (data.fleet_capacity_kg || '0') + ' kg';
+        document.getElementById('pending-orders').textContent = data.pending_orders || '0';
+        document.getElementById('today-orders').textContent = data.total_orders_today || '0';
+        
+        // Calculate utilization
+        const util = data.total_vehicles > 0 ? Math.round((data.active_vehicles / data.total_vehicles) * 100) : 0;
+        document.getElementById('fleet-util').textContent = util + '%';
+        document.getElementById('util-progress').style.width = util + '%';
+    })
+    .catch(err => console.error('Error loading stats:', err));
+
+// Load Chart
+fetch('/api/forecast_chart')
+    .then(res => res.json())
+    .then(data => {
+        const ctx = document.getElementById('demandChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels || [],
+                datasets: [{
+                    label: 'Orders',
+                    data: data.values || [],
+                    borderColor: '#4361ee',
+                    backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { 
+                    legend: { display: false } 
+                },
+                scales: {
+                    y: { 
+                        grid: { color: 'rgba(255,255,255,0.05)' }, 
+                        ticks: { color: '#94a3b8' } 
+                    },
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { color: '#94a3b8' } 
+                    }
+                }
+            }
+        });
+    })
+    .catch(err => console.error('Error loading chart:', err));
+</script>
+{% endblock %}

@@ -306,3 +306,5 @@ For questions or support, please open an issue on GitHub.
 ---
 
 **Built with ❤️ for Advanced Logistics Management**
+#   D y n a m i c - L o a d - M a n a g e m e n t - a n d - R o u t e - O p t i m i z a t i o n - i n - L o g i s t i c s - U s i n g - P r e d i c t i v e - A n a l y t i c s  
+ 

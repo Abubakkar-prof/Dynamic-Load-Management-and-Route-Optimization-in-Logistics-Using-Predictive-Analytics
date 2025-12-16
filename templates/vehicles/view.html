@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Vehicle {{ vehicle.vehicle_id }} - Logistics AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Vehicle Details</h2>
+        <p class="text-muted mb-0">{{ vehicle.vehicle_id }} - {{ vehicle.make }} {{ vehicle.model }}</p>
+    </div>
+    <a href="{{ url_for('vehicles.list_vehicles') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Fleet
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Vehicle Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Vehicle Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small">Vehicle ID</label>
+                        <p class="fw-bold">{{ vehicle.vehicle_id }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Status</label>
+                        <p>
+                            {% set status_val = vehicle.status.value if vehicle.status.value is defined else str(vehicle.status) %}
+                            {% if status_val == 'Available' %}
+                                <span class="badge bg-success">{{ status_val }}</span>
+                            {% elif status_val == 'On Route' %}
+                                <span class="badge bg-info">{{ status_val }}</span>
+                            {% elif status_val == 'Maintenance' %}
+                                <span class="badge bg-warning">{{ status_val }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ status_val }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Make & Model</label>
+                        <p>{{ vehicle.make }} {{ vehicle.model }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Year</label>
+                        <p>{{ vehicle.year or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Type</label>
+                        <p>{{ vehicle.type }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">License Plate</label>
+                        <p>{{ vehicle.license_plate or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Weight Capacity</label>
+                        <p>{{ vehicle.capacity_kg }} kg</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Volume Capacity</label>
+                        <p>{{ vehicle.capacity_vol }} m³</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Fuel Type</label>
+                        <p>{{ vehicle.fuel_type or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Mileage</label>
+                        <p>{{ vehicle.mileage or 0 }} km</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Routes -->
+        {% if routes %}
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-route me-2"></i>Recent Routes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Route ID</th>
+                                <th>Date</th>
+                                <th>Distance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for route in routes %}
+                            <tr>
+                                <td>{{ route.route_id }}</td>
+                                <td>{{ route.date.strftime('%Y-%m-%d') if route.date else 'N/A' }}</td>
+                                <td>{{ route.total_distance_km or 0 }} km</td>
+                                <td>
+                                    <span class="badge bg-info">{{ route.status }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-route fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No routes assigned to this vehicle yet.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Maintenance -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Maintenance</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small">Last Maintenance</label>
+                    <p>{{ vehicle.last_maintenance.strftime('%Y-%m-%d') if vehicle.last_maintenance else 'N/A' }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small">Next Maintenance</label>
+                    <p>{{ vehicle.next_maintenance.strftime('%Y-%m-%d') if vehicle.next_maintenance else 'N/A' }}</p>
+                </div>
+                {% if vehicle.next_maintenance %}
+                <div class="alert alert-warning small mb-0">
+                    <i class="fas fa-wrench me-2"></i>Maintenance due soon
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Location -->
+        {% if vehicle.current_location_lat and vehicle.current_location_lon %}
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Current Location</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-2">
+                    <strong>Lat:</strong> {{ vehicle.current_location_lat }}<br>
+                    <strong>Lon:</strong> {{ vehicle.current_location_lon }}
+                </p>
+                <a href="https://www.google.com/maps?q={{ vehicle.current_location_lat }},{{ vehicle.current_location_lon }}" 
+                   target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-map-marker-alt me-2"></i>View on Map
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

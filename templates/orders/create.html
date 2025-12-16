@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Create Order - Logistics AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Create New Order</h2>
+        <p class="text-muted mb-0">Add a new delivery order to the system</p>
+    </div>
+    <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Orders
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('orders.create_order') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <h5 class="card-title mb-4">Order Information</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.order_id.label }}</label>
+                            {{ form.order_id(class="form-control" + (" is-invalid" if form.order_id.errors else "")) }}
+                            {% if form.order_id.errors %}
+                                <div class="invalid-feedback">{{ form.order_id.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.region.label }}</label>
+                            {{ form.region(class="form-select" + (" is-invalid" if form.region.errors else "")) }}
+                            {% if form.region.errors %}
+                                <div class="invalid-feedback">{{ form.region.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="card-title mb-3 mt-4">Customer Details</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">{{ form.customer_name.label }}</label>
+                            {{ form.customer_name(class="form-control" + (" is-invalid" if form.customer_name.errors else "")) }}
+                            {% if form.customer_name.errors %}
+                                <div class="invalid-feedback">{{ form.customer_name.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.customer_phone.label }}</label>
+                            {{ form.customer_phone(class="form-control" + (" is-invalid" if form.customer_phone.errors else "")) }}
+                            {% if form.customer_phone.errors %}
+                                <div class="invalid-feedback">{{ form.customer_phone.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.customer_email.label }}</label>
+                            {{ form.customer_email(class="form-control" + (" is-invalid" if form.customer_email.errors else "")) }}
+                            {% if form.customer_email.errors %}
+                                <div class="invalid-feedback">{{ form.customer_email.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label">{{ form.delivery_address.label }}</label>
+                            {{ form.delivery_address(class="form-control" + (" is-invalid" if form.delivery_address.errors else ""), rows=3) }}
+                            {% if form.delivery_address.errors %}
+                                <div class="invalid-feedback">{{ form.delivery_address.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="card-title mb-3 mt-4">Package Details</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.weight_kg.label }}</label>
+                            {{ form.weight_kg(class="form-control" + (" is-invalid" if form.weight_kg.errors else "")) }}
+                            {% if form.weight_kg.errors %}
+                                <div class="invalid-feedback">{{ form.weight_kg.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.volume_m3.label }}</label>
+                            {{ form.volume_m3(class="form-control" + (" is-invalid" if form.volume_m3.errors else "")) }}
+                            {% if form.volume_m3.errors %}
+                                <div class="invalid-feedback">{{ form.volume_m3.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.priority.label }}</label>
+                            {{ form.priority(class="form-control" + (" is-invalid" if form.priority.errors else "")) }}
+                            <small class="text-muted">1=Low, 2=Medium, 3=High, 4=Urgent</small>
+                            {% if form.priority.errors %}
+                                <div class="invalid-feedback">{{ form.priority.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="card-title mb-3 mt-4">Location (Optional)</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.latitude.label }}</label>
+                            {{ form.latitude(class="form-control" + (" is-invalid" if form.latitude.errors else "")) }}
+                            {% if form.latitude.errors %}
+                                <div class="invalid-feedback">{{ form.latitude.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.longitude.label }}</label>
+                            {{ form.longitude(class="form-control" + (" is-invalid" if form.longitude.errors else "")) }}
+                            {% if form.longitude.errors %}
+                                <div class="invalid-feedback">{{ form.longitude.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.deadline_hour.label }}</label>
+                            {{ form.deadline_hour(class="form-control" + (" is-invalid" if form.deadline_hour.errors else "")) }}
+                            {% if form.deadline_hour.errors %}
+                                <div class="invalid-feedback">{{ form.deadline_hour.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label">{{ form.delivery_notes.label }}</label>
+                            {{ form.delivery_notes(class="form-control" + (" is-invalid" if form.delivery_notes.errors else ""), rows=3) }}
+                            {% if form.delivery_notes.errors %}
+                                <div class="invalid-feedback">{{ form.delivery_notes.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>Create Order
+                        </button>
+                        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3"><i class="fas fa-info-circle me-2"></i>Quick Tips</h6>
+                <ul class="small text-muted">
+                    <li class="mb-2">Order ID should be unique</li>
+                    <li class="mb-2">Weight is required for route planning</li>
+                    <li class="mb-2">Higher priority orders are scheduled first</li>
+                    <li class="mb-2">Coordinates help optimize delivery routes</li>
+                    <li class="mb-2">Deadline hour is in 24-hour format (0-23)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

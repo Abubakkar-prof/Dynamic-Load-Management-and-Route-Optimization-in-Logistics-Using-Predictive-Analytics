@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Orders - Logistics AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Orders Management</h2>
+        <p class="text-muted mb-0">Manage and track all customer orders</p>
+    </div>
+    <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary px-4">
+        <i class="fas fa-plus me-2"></i>New Order
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4 p-3">
+    <form method="GET" action="{{ url_for('orders.list_orders') }}" class="row g-3">
+        <div class="col-md-3">
+            <input type="text" class="form-control" name="search" placeholder="Search orders..." value="{{ search }}">
+        </div>
+        <div class="col-md-2">
+            <select class="form-select" name="status">
+                <option value="all" {% if status_filter == 'all' or not status_filter %}selected{% endif %}>All Status</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>Assigned</option>
+                <option value="in_transit" {% if status_filter == 'in_transit' %}selected{% endif %}>In Transit</option>
+                <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select class="form-select" name="region">
+                <option value="all" {% if region_filter == 'all' or not region_filter %}selected{% endif %}>All Regions</option>
+                <option value="North" {% if region_filter == 'North' %}selected{% endif %}>North</option>
+                <option value="South" {% if region_filter == 'South' %}selected{% endif %}>South</option>
+                <option value="East" {% if region_filter == 'East' %}selected{% endif %}>East</option>
+                <option value="West" {% if region_filter == 'West' %}selected{% endif %}>West</option>
+                <option value="Central" {% if region_filter == 'Central' %}selected{% endif %}>Central</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">
+                <i class="fas fa-filter me-2"></i>Filter
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Region</th>
+                    <th>Weight (kg)</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><strong>{{ order.order_id }}</strong></td>
+                    <td>{{ order.customer_name or 'N/A' }}</td>
+                    <td><span class="badge bg-info">{{ order.region }}</span></td>
+                    <td>{{ order.weight_kg }}</td>
+                    <td>
+                        {% if order.priority == 4 %}
+                            <span class="badge bg-danger">Urgent</span>
+                        {% elif order.priority == 3 %}
+                            <span class="badge bg-warning">High</span>
+                        {% elif order.priority == 2 %}
+                            <span class="badge bg-primary">Medium</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Low</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set status_val = order.status.value if order.status.value is defined else str(order.status) %}
+                        {% if status_val == 'Pending' %}
+                            <span class="badge bg-warning">{{ status_val }}</span>
+                        {% elif status_val == 'Delivered' %}
+                            <span class="badge bg-success">{{ status_val }}</span>
+                        {% elif status_val == 'In Transit' %}
+                            <span class="badge bg-info">{{ status_val }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ status_val }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else 'N/A' }}</td>
+                    <td>
+                        <a href="{{ url_for('orders.view_order', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                        No orders found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="card-footer">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('orders.list_orders', page=pagination.prev_num, status=status_filter, region=region_filter, search=search) }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('orders.list_orders', page=page_num, status=status_filter, region=region_filter, search=search) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('orders.list_orders', page=pagination.next_num, status=status_filter, region=region_filter, search=search) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

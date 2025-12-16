@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Order {{ order.order_id }} - Logistics AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Order Details</h2>
+        <p class="text-muted mb-0">{{ order.order_id }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('orders.edit_order', order_id=order.id) }}" class="btn btn-warning me-2">
+            <i class="fas fa-edit me-2"></i>Edit
+        </a>
+        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Order Information -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-box me-2"></i>Order Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small">Order ID</label>
+                        <p class="fw-bold">{{ order.order_id }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Status</label>
+                        <p>
+                            {% set status_val = order.status.value if order.status.value is defined else str(order.status) %}
+                            {% if status_val == 'Pending' %}
+                                <span class="badge bg-warning">{{ status_val }}</span>
+                            {% elif status_val == 'Delivered' %}
+                                <span class="badge bg-success">{{ status_val }}</span>
+                            {% elif status_val == 'In Transit' %}
+                                <span class="badge bg-info">{{ status_val }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ status_val }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Region</label>
+                        <p><span class="badge bg-info">{{ order.region }}</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Priority</label>
+                        <p>
+                            {% if order.priority == 4 %}
+                                <span class="badge bg-danger">Urgent</span>
+                            {% elif order.priority == 3 %}
+                                <span class="badge bg-warning">High</span>
+                            {% elif order.priority == 2 %}
+                                <span class="badge bg-primary">Medium</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Low</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Weight</label>
+                        <p>{{ order.weight_kg }} kg</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Volume</label>
+                        <p>{{ order.volume_m3 or 'N/A' }} m³</p>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="text-muted small">Created</label>
+                        <p>{{ order.created_at.strftime('%Y-%m-%d %H:%M:%S') if order.created_at else 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small">Name</label>
+                        <p>{{ order.customer_name or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Phone</label>
+                        <p>{{ order.customer_phone or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="text-muted small">Email</label>
+                        <p>{{ order.customer_email or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="text-muted small">Delivery Address</label>
+                        <p>{{ order.delivery_address or 'N/A' }}</p>
+                    </div>
+                    {% if order.delivery_notes %}
+                    <div class="col-md-12">
+                        <label class="text-muted small">Delivery Notes</label>
+                        <p class="text-muted">{{ order.delivery_notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking History -->
+        {% if tracking %}
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Tracking History</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for update in tracking %}
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-circle text-primary" style="font-size: 0.5rem;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ update.status }}</strong>
+                                <small class="text-muted">{{ update.timestamp.strftime('%Y-%m-%d %H:%M') if update.timestamp else '' }}</small>
+                            </div>
+                            {% if update.notes %}
+                            <p class="text-muted small mb-0">{{ update.notes }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                {% if order.status.value == 'Pending' or order.status == 'Pending' %}
+                <button class="btn btn-primary btn-sm w-100 mb-2" onclick="updateStatus('assigned')">
+                    <i class="fas fa-check me-2"></i>Assign to Route
+                </button>
+                {% endif %}
+                
+                {% if order.status.value == 'Assigned' or order.status == 'Assigned' %}
+                <button class="btn btn-info btn-sm w-100 mb-2" onclick="updateStatus('in_transit')">
+                    <i class="fas fa-truck me-2"></i>Mark In Transit
+                </button>
+                {% endif %}
+                
+                {% if order.status.value == 'In Transit' or order.status == 'In Transit' %}
+                <button class="btn btn-success btn-sm w-100 mb-2" onclick="updateStatus('delivered')">
+                    <i class="fas fa-check-circle me-2"></i>Mark Delivered
+                </button>
+                {% endif %}
+                
+                <button class="btn btn-danger btn-sm w-100" onclick="updateStatus('cancelled')">
+                    <i class="fas fa-times me-2"></i>Cancel Order
+                </button>
+            </div>
+        </div>
+
+        <!-- Location -->
+        {% if order.latitude and order.longitude %}
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Location</h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-2">
+                    <strong>Lat:</strong> {{ order.latitude }}<br>
+                    <strong>Lon:</strong> {{ order.longitude }}
+                </p>
+                <a href="https://www.google.com/maps?q={{ order.latitude }},{{ order.longitude }}" 
+                   target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-map-marker-alt me-2"></i>View on Map
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateStatus(newStatus) {
+    const notes = prompt('Add notes (optional):');
+    
+    fetch('{{ url_for("orders.update_status", order_id=order.id) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            status: newStatus,
+            notes: notes || ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error updating status');
+        console.error(error);
+    });
+}
+</script>
+{% endblock %}
