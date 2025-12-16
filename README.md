@@ -1,277 +1,306 @@
-# 🚚 Logistics AI - Advanced Full-Stack Route Optimization Platform
+# 🚚 Logistics AI – Advanced Full-Stack Route Optimization Platform
 
-An enterprise-grade logistics management system with AI-powered demand forecasting and intelligent route optimization using Google OR-Tools.
+An enterprise-grade logistics management system with **AI-powered demand forecasting** and **intelligent route optimization** using **Google OR-Tools**.
+
+---
 
 ## 🌟 Features
 
 ### Core Functionality
-- **🤖 AI-Powered Demand Forecasting** - Machine Learning models (RandomForest, XGBoost) for accurate demand prediction
-- **🗺️ Intelligent Route Optimization** - Google OR-Tools CVRP solver for optimal vehicle routing
-- **📊 Real-time Dashboard** - Live analytics with interactive charts and maps
-- **📦 Order Management** - Complete CRUD operations with status tracking
-- **🚛 Fleet Management** - Vehicle tracking, maintenance records, and utilization metrics
-- **👤 Driver Management** - Driver profiles, ratings, and assignment tracking
-- **📈 Performance Analytics** - Historical metrics and performance reports
-- **🔔 Notification System** - Real-time alerts and updates
+
+* **🤖 AI-Powered Demand Forecasting** – Machine learning models (RandomForest, XGBoost, Prophet)
+* **🗺️ Intelligent Route Optimization** – Google OR-Tools CVRP solver
+* **📊 Real-time Dashboard** – Live analytics with interactive charts and maps
+* **📦 Order Management** – Full CRUD with status tracking
+* **🚛 Fleet Management** – Vehicle tracking, maintenance, and utilization metrics
+* **👤 Driver Management** – Driver profiles, ratings, and assignment tracking
+* **📈 Performance Analytics** – Historical metrics and reports
+* **🔔 Notification System** – Real-time alerts and updates
 
 ### Technical Features
-- **🔐 Authentication & Authorization** - Role-based access control (Admin, Manager, Dispatcher, Driver)
-- **🗄️ Advanced Database Models** - SQLAlchemy ORM with comprehensive relationships
-- **🎨 Modern UI/UX** - Responsive dark-themed interface with Bootstrap 5
-- **📱 RESTful API** - Well-structured API endpoints for all operations
-- **🧪 Testing Suite** - Comprehensive pytest test coverage
-- **⚙️ Configuration Management** - Environment-based config (Development/Production)
+
+* **🔐 Authentication & Authorization** – Role-based access (Admin, Manager, Dispatcher, Driver)
+* **🗄️ Advanced Database Models** – SQLAlchemy ORM with relationships
+* **🎨 Modern UI/UX** – Responsive dark-themed UI with Bootstrap 5
+* **📱 RESTful API** – Structured API endpoints
+* **🧪 Testing Suite** – Pytest-based tests
+* **⚙️ Configuration Management** – Environment-based configs
+
+---
 
 ## 🛠️ Technology Stack
 
 ### Backend
-- **Flask** - Web framework
-- **SQLAlchemy** - ORM for database operations
-- **Flask-Login** - User session management
-- **Flask-WTF** - Form handling and validation
+
+* Flask
+* SQLAlchemy
+* Flask-Login
+* Flask-WTF
 
 ### Machine Learning & Optimization
-- **scikit-learn** - Machine learning algorithms
-- **XGBoost** - Gradient boosting for demand forecasting
-- **Prophet** - Time series forecasting
-- **Google OR-Tools** - Constraint programming and route optimization
+
+* scikit-learn
+* XGBoost
+* Prophet
+* Google OR-Tools
 
 ### Frontend
-- **Bootstrap 5** - Responsive UI framework
-- **Chart.js** - Interactive data visualization
-- **Leaflet.js** - Interactive maps
-- **Font Awesome** - Icon library
+
+* Bootstrap 5
+* Chart.js
+* Leaflet.js
+* Font Awesome
 
 ### Database
-- **SQLite** - Default database (Development)
-- **PostgreSQL** - Production-ready option
+
+* SQLite (Development)
+* PostgreSQL (Production)
+
+---
 
 ## 📋 Prerequisites
 
-- Python 3.8+
-- pip (Python package manager)
-- Git
+* Python 3.8+
+* pip
+* Git
+
+---
 
 ## 🚀 Installation & Setup
 
-### 1. Clone the Repository
+### 1️⃣ Clone the Repository
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/Abubakkar-prof/Dynamic-Load-Management-and-Route-Optimization-in-Logistics-Using-Predictive-Analytics.git
 cd SK
 ```
 
-### 2. Create Virtual Environment
+### 2️⃣ Create Virtual Environment
+
 ```bash
 python -m venv .venv
-
 # Windows
 .venv\Scripts\activate
-
-# Linux/Mac
+# Linux / macOS
 source .venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 3️⃣ Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment
-```bash
-# Copy example environment file
-copy .env.example .env  # Windows
-# OR
-cp .env.example .env    # Linux/Mac
+### 4️⃣ Configure Environment
 
-# Edit .env with your configuration
+```bash
+# Windows
+copy .env.example .env
+# Linux / macOS
+cp .env.example .env
 ```
 
-### 5. Run Setup Script
+Edit `.env` with your configuration.
+
+### 5️⃣ Run Setup Script
+
 ```bash
 python setup.py
 ```
 
 This will:
-- Generate synthetic data (fleet, orders, historical demand)
-- Train the ML demand forecasting model
-- Initialize the database with seed data
-- Create default user accounts
 
-### 6. Start the Application
+* Generate synthetic data
+* Train ML demand forecasting models
+* Initialize the database
+* Create default user accounts
+
+### 6️⃣ Start the Application
+
 ```bash
 python app.py
 ```
 
-Visit: **http://localhost:5000**
+Visit **[http://localhost:5000](http://localhost:5000)**
+
+---
 
 ## 👥 Default Login Credentials
 
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | admin | admin123 |
-| Manager | manager | manager123 |
+| Role       | Username   | Password    |
+| ---------- | ---------- | ----------- |
+| Admin      | admin      | admin123    |
+| Manager    | manager    | manager123  |
 | Dispatcher | dispatcher | dispatch123 |
-| Driver | driver1 | driver123 |
+| Driver     | driver1    | driver123   |
+
+---
 
 ## 📁 Project Structure
 
-```
+```text
 SK/
-│
-├── app.py                          # Main application entry point
-├── config.py                       # Configuration management
-├── setup.py                        # Automated setup script
-├── requirements.txt                # Python dependencies
+│── app.py
+│── config.py
+│── setup.py
+│── requirements.txt
 │
 ├── src/
-│   ├── routes/                     # Blueprint routes
-│   │   ├── auth_routes.py         # Authentication endpoints
-│   │   ├── main_routes.py         # Dashboard & main pages
-│   │   ├── orders_routes.py       # Order management
-│   │   ├── fleet_routes.py        # Vehicle & driver management
-│   │   └── optimization_routes.py # Route optimization
+│   ├── routes/
+│   │   ├── auth_routes.py
+│   │   ├── main_routes.py
+│   │   ├── orders_routes.py
+│   │   ├── fleet_routes.py
+│   │   └── optimization_routes.py
 │   │
 │   ├── models/
-│   │   └── demand_predictor.py    # ML demand forecasting
+│   │   └── demand_predictor.py
 │   │
 │   ├── optimization/
-│   │   └── optimizer.py           # OR-Tools route optimizer
+│   │   └── optimizer.py
 │   │
 │   ├── persistence/
-│   │   ├── models.py              # Database models
-│   │   └── db_init.py             # Database initialization
+│   │   ├── models.py
+│   │   └── db_init.py
 │   │
 │   ├── data/
-│   │   └── data_generator.py      # Synthetic data generation
+│   │   └── data_generator.py
 │   │
-│   └── forms.py                    # WTForms definitions
+│   └── forms.py
 │
-├── templates/                      # Jinja2 templates
-│   ├── base.html                  # Base template
-│   ├── dashboard.html             # Main dashboard
-│   ├── login.html                 # Login page
-│   ├── register.html              # Registration page
-│   └── orders/                    # Order templates
-│       └── list.html              # Orders list
+├── templates/
+│   ├── base.html
+│   ├── dashboard.html
+│   ├── login.html
+│   ├── register.html
+│   └── orders/
+│       └── list.html
 │
-├── static/                         # Static assets
-│   ├── css/                       # Custom stylesheets
-│   └── js/                        # Custom JavaScript
+├── static/
+│   ├── css/
+│   └── js/
 │
-├── data/                           # Generated data files
+├── data/
 │   ├── fleet_info.csv
 │   ├── historical_demand.csv
 │   ├── orders.csv
 │   └── forecast.csv
 │
-├── models/                         # Trained ML models
+├── models/
 │   ├── demand_model.pkl
 │   └── model_columns.json
 │
-└── tests/                          # Test suite
+└── tests/
     └── test_core.py
 ```
 
+---
+
 ## 🎯 Key Components
 
-### 1. Route Optimization
-The system uses Google OR-Tools to solve the Capacitated Vehicle Routing Problem (CVRP):
-- Minimizes total distance traveled
-- Respects vehicle capacity constraints
-- Optimizes delivery sequences
-- Provides real-time route visualization
+### Route Optimization
 
-### 2. Demand Forecasting
-Machine Learning pipeline for demand prediction:
-- Historical data analysis
-- Feature engineering (day of week, seasonality)
-- Multiple model comparison
-- 7-day rolling forecasts
+* Solves Capacitated Vehicle Routing Problem (CVRP)
+* Minimizes total distance
+* Enforces vehicle capacity constraints
+* Optimized delivery sequencing
 
-### 3. Database Architecture
-Comprehensive relational database with:
-- User management with role-based access
-- Fleet and driver tracking
-- Order lifecycle management
-- Route planning and execution
-- Performance metrics storage
+### Demand Forecasting
+
+* Historical demand analysis
+* Feature engineering (seasonality, weekdays)
+* Model comparison and selection
+* Rolling 7-day forecasts
+
+### Database Architecture
+
+* Role-based user management
+* Fleet and driver tracking
+* Order lifecycle management
+* Performance metrics storage
+
+---
 
 ## 📊 API Endpoints
 
 ### Authentication
-- `POST /auth/login` - User login
-- `POST /auth/register` - User registration
-- `GET /auth/logout` - User logout
+
+* `POST /auth/login`
+* `POST /auth/register`
+* `GET /auth/logout`
 
 ### Dashboard
-- `GET /api/stats` - Get dashboard statistics
-- `GET /api/forecast_chart` - Get demand forecast data
-- `GET /api/notifications` - Get user notifications
+
+* `GET /api/stats`
+* `GET /api/forecast_chart`
+* `GET /api/notifications`
 
 ### Orders
-- `GET /orders` - List all orders (with filters)
-- `GET /orders/<id>` - Get order details
-- `POST /orders/create` - Create new order
-- `PUT /orders/<id>/status` - Update order status
-- `GET /api/orders` - Get orders as JSON
+
+* `GET /orders`
+* `POST /orders/create`
+* `PUT /orders/<id>/status`
+* `GET /api/orders`
 
 ### Fleet
-- `GET /vehicles` - List all vehicles
-- `GET /api/vehicles` - Get vehicles as JSON
-- `GET /drivers` - List all drivers
-- `GET /api/drivers` - Get drivers as JSON
+
+* `GET /vehicles`
+* `GET /drivers`
+* `GET /api/vehicles`
+* `GET /api/drivers`
 
 ### Optimization
-- `POST /optimization/api/optimize` - Run route optimization
-- `GET /optimization/routes` - List all routes
-- `GET /optimization/routes/<id>` - Get route details
+
+* `POST /optimization/api/optimize`
+* `GET /optimization/routes`
+
+---
 
 ## 🧪 Running Tests
 
 ```bash
-# Run all tests
 pytest
-
-# Run with coverage
 pytest --cov=src tests/
-
-# Run specific test file
 pytest tests/test_core.py
 ```
 
+---
+
 ## 🔧 Configuration
 
-Edit `config.py` or `.env` file to configure:
+Configure via `config.py` or `.env`:
 
-- **Database URL** - SQLite (default) or PostgreSQL
-- **Secret Key** - For session encryption
-- **Mail Settings** - For email notifications
-- **API Keys** - Google Maps, etc.
-- **Upload Settings** - File size limits, allowed extensions
+* Database URL
+* Secret key
+* Mail settings
+* API keys
+* Upload limits
+
+---
 
 ## 📦 Deployment
 
 ### Production Setup
 
-1. **Update Configuration**
-```python
-# Set FLASK_ENV=production in .env
+```bash
 FLASK_ENV=production
-SECRET_KEY=<strong-random-key>
+SECRET_KEY=your-secret-key
 DATABASE_URL=postgresql://user:pass@localhost/logistics_db
 ```
 
-2. **Use Production Server**
+### Run with Gunicorn
+
 ```bash
 gunicorn -w 4 -b 0.0.0.0:8000 app:app
 ```
 
-3. **Setup Nginx** (Reverse Proxy)
+### Nginx Reverse Proxy
+
 ```nginx
 server {
     listen 80;
     server_name your-domain.com;
-    
+
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -280,31 +309,31 @@ server {
 }
 ```
 
+---
+
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Commit your changes
 4. Push to the branch
-5. Create a Pull Request
+5. Open a Pull Request
+
+---
 
 ## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License**.
+
+---
 
 ## 🙏 Acknowledgments
 
-- **Google OR-Tools** - Route optimization engine
-- **scikit-learn** - Machine learning framework
-- **Flask** - Web framework
-- **Bootstrap** - UI framework
-
-## 📧 Contact
-
-For questions or support, please open an issue on GitHub.
+* Google OR-Tools
+* scikit-learn
+* Flask
+* Bootstrap
 
 ---
 
 **Built with ❤️ for Advanced Logistics Management**
-#   D y n a m i c - L o a d - M a n a g e m e n t - a n d - R o u t e - O p t i m i z a t i o n - i n - L o g i s t i c s - U s i n g - P r e d i c t i v e - A n a l y t i c s  
- 
