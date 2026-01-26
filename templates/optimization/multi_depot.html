@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Multi-Depot Optimization - Logistics OS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .depot-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .route-segment {
+        border-left: 2px solid var(--brand-primary);
+        padding-left: 1.5rem;
+        position: relative;
+        margin-left: 0.75rem;
+    }
+
+    .route-segment::before {
+        content: '';
+        position: absolute;
+        left: -5px;
+        top: 0;
+        width: 8px;
+        height: 8px;
+        background: var(--brand-primary);
+        border-radius: 50%;
+    }
+
+    #map {
+        height: 600px;
+        border-radius: 20px;
+        border: 1px solid var(--border-default);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2 class="fw-bold text-heading mb-1">Advanced Multi-Depot Routing</h2>
+        <p class="text-body mb-0 small">Distributed logistics network optimization across multiple distribution centers.
+        </p>
+    </div>
+    <div class="d-flex gap-3">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary py-2 px-4 shadow-sm">
+                <i class="fas fa-project-diagram me-2"></i>Generate Optimal Network
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div id="map"></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold text-heading mb-4">Operational Nodes</h6>
+                {% for depot in depots %}
+                <div class="depot-card">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-2 d-flex align-items-center justify-content-center"
+                            style="width: 32px; height: 32px;">
+                            <i class="fas fa-warehouse x-small"></i>
+                        </div>
+                        <span class="text-heading fw-bold">{{ depot.name }}</span>
+                    </div>
+                    <p class="x-small text-body mb-0">{{ depot.address }}</p>
+                    <div class="mt-2 text-info x-small">
+                        <i class="fas fa-location-dot me-1"></i>{{ depot.latitude }}, {{ depot.longitude }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-city opacity-20 fa-3x mb-3"></i>
+                    <p class="text-body small">No active depots found.</p>
+                    <a href="/admin/logistics/depot/add/" class="btn btn-secondary btn-sm">Add Distribution Center</a>
+                </div>
+                {% endfor %}
+
+                {% if results %}
+                <h6 class="fw-bold text-heading mt-5 mb-4">Optimization Results</h6>
+                <div class="overflow-auto" style="max-height: 400px;">
+                    {% for res in results %}
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary bg-opacity-10 text-primary small">{{ res.vehicle_id }}</span>
+                            <span class="x-small text-body">{{ res.depot_name }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between x-small mb-1">
+                            <span>Distance: {{ (res.total_distance_m / 1000)|round(1) }} km</span>
+                            <span class="text-success">{{ res.utilization_pct }}% Util</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const map = L.map('map').setView([31.5204, 74.3587], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const icons = {
+        depot: L.divIcon({
+            className: 'depot-icon',
+            html: '<div style="background:#ca8a04; width:16px; height:16px; border:3px solid #fff; border-radius:3px; shadow: 0 0 10px #ca8a04;"></div>',
+            iconSize: [16, 16]
+        }),
+        order: L.divIcon({
+            className: 'order-icon',
+            html: '<div style="background:#3b82f6; width:8px; height:8px; border:1px solid #fff; border-radius:50%;"></div>',
+            iconSize: [8, 8]
+        })
+    };
+
+    {% for depot in depots %}
+    L.marker([{{ depot.latitude }}, {{ depot.longitude }}], { icon: icons.depot })
+        .addTo(map).bindPopup('Depot: {{ depot.name }}');
+    {% endfor %}
+
+    {% if results %}
+    const colors = ['#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#f59e0b'];
+    let colorIdx = 0;
+
+    {% for res in results %}
+    const path_{{ loop.index }} =[
+        {% for step in res.route %}
+    [{{ step.lat }}, {{ step.lon }}],
+        {% endfor %}
+    ];
+    L.polyline(path_{{ loop.index }}, {
+        color: colors[colorIdx % colors.length],
+        weight: 3,
+        opacity: 0.6
+    }).addTo(map);
+    colorIdx++;
+
+    {% for step in res.route %}
+    L.marker([{{ step.lat }}, {{ step.lon }}], { icon: icons.order })
+        .addTo(map).bindPopup('Order: {{ step.order_id }}');
+    {% endfor %}
+    {% endfor %}
+    {% endif %}
+</script>
+{% endblock %}

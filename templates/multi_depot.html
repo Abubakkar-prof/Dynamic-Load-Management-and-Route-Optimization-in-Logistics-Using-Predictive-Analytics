@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}Multi-Depot Optimization{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Multi-Depot Strategic Mapping</h2>
+    <p class="text-body mb-0 small">Geospatial route optimization across distributed logistics hubs.</p>
+  </div>
+  <div class="d-flex gap-3">
+    <button id="generateScenarioBtn" class="btn btn-secondary py-2 px-4 shadow-sm border-white border-opacity-10">
+      <i class="fas fa-satellite-dish me-2"></i>Synthesize Logistics Scenario
+    </button>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Configuration -->
+  <div class="col-xl-4">
+    <div class="card mb-4">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+          <i class="fas fa-warehouse text-primary"></i>
+        </div>
+        <h6 class="fw-bold text-heading mb-0 small">Hub Selection</h6>
+      </div>
+
+      <div class="mb-4">
+        <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Available Logistics Hubs</label>
+        <div id="depotList" class="bg-dark bg-opacity-25 rounded-4 p-3 border border-white border-opacity-5"
+          style="max-height: 300px; overflow-y: auto;">
+          <div class="text-center py-4 opacity-50">
+            <i class="fas fa-sync fa-spin mb-2"></i>
+            <p class="x-small mb-0">Synchronizing hub data...</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Manual Coordinate Entry</label>
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <input type="number" class="form-control" id="customLat" placeholder="Latitude" step="0.0001">
+          </div>
+          <div class="col-6">
+            <input type="number" class="form-control" id="customLon" placeholder="Longitude" step="0.0001">
+          </div>
+        </div>
+        <button id="addDepotBtn" class="btn btn-secondary w-100 py-2">
+          <i class="fas fa-plus me-2"></i>Register Custom Hub
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-warning bg-opacity-10 p-2 rounded-3 me-3">
+          <i class="fas fa-brain text-warning"></i>
+        </div>
+        <h6 class="fw-bold text-heading mb-0 small">Operational Logic</h6>
+      </div>
+      <div class="x-small text-body opacity-75">
+        <div class="d-flex mb-3">
+          <div class="me-3 mt-1"><i class="fas fa-check-circle text-primary"></i></div>
+          <div><strong>Hub Affinity:</strong> Orders assigned to nearest distribution center automatically.</div>
+        </div>
+        <div class="d-flex mb-3">
+          <div class="me-3 mt-1"><i class="fas fa-check-circle text-primary"></i></div>
+          <div><strong>Fleet Solving:</strong> Localized VRP solving for each regional fleet.</div>
+        </div>
+        <div class="d-flex">
+          <div class="me-3 mt-1"><i class="fas fa-check-circle text-primary"></i></div>
+          <div><strong>Global Minima:</strong> Total network distance minimized across all routes.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="col-xl-8">
+    <div class="card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+          <div class="bg-success bg-opacity-10 p-2 rounded-3 me-3">
+            <i class="fas fa-diagram-project text-success"></i>
+          </div>
+          <h6 class="fw-bold text-heading mb-0 small">Optimization Workspace</h6>
+        </div>
+        <button id="optimizeBtn" class="btn btn-primary px-4 py-2" disabled>
+          <i class="fas fa-bolt-lightning me-2"></i>Execute Global Optimization
+        </button>
+      </div>
+
+      <div id="optimizationResults" class="flex-grow-1">
+        <div class="text-center py-5">
+          <div class="bg-dark bg-opacity-25 rounded-circle d-inline-flex p-4 mb-4 border border-white border-opacity-5">
+            <i class="fas fa-map-location-dot fa-3x text-body opacity-25"></i>
+          </div>
+          <h5 class="text-heading fw-bold">Strategic Overlay Pending</h5>
+          <p class="text-body small mx-auto" style="max-width: 300px;">Initialize a logistics scenario and select active
+            hubs to begin network mapping.</p>
+        </div>
+      </div>
+
+      <div id="analysisResults" class="mt-4 pt-4 border-top border-white border-opacity-5" style="display: none;">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Global variables
+  let selectedDepots = [];
+  let scenarioData = null;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Load sample depots
+    loadSampleDepots();
+
+    // Event listeners
+    document.getElementById('generateScenarioBtn').addEventListener('click', generateScenario);
+    document.getElementById('addDepotBtn').addEventListener('click', addCustomDepot);
+    document.getElementById('optimizeBtn').addEventListener('click', runOptimization);
+  });
+
+  function loadSampleDepots() {
+    fetch('/api/multi_depot/depots')
+      .then(response => response.json())
+      .then(data => {
+        const depotList = document.getElementById('depotList');
+        depotList.innerHTML = '';
+
+        data.depots.forEach(depot => {
+          const depotElement = document.createElement('div');
+          depotElement.className = 'form-check mb-2';
+          depotElement.innerHTML = `
+          <input class="form-check-input depot-checkbox" type="checkbox" value="${depot.id}" id="depot${depot.id}">
+          <label class="form-check-label" for="depot${depot.id}">
+            ${depot.name} (${depot.lat.toFixed(4)}, ${depot.lon.toFixed(4)})
+          </label>
+        `;
+          depotList.appendChild(depotElement);
+        });
+
+        // Add event listeners to checkboxes
+        document.querySelectorAll('.depot-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', updateSelectedDepots);
+        });
+      })
+      .catch(error => {
+        document.getElementById('depotList').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Failed to load depots: ${error.message}
+        </div>
+      `;
+      });
+  }
+
+  function updateSelectedDepots() {
+    selectedDepots = [];
+    document.querySelectorAll('.depot-checkbox:checked').forEach(checkbox => {
+      selectedDepots.push(parseInt(checkbox.value));
+    });
+
+    // Enable/disable optimize button
+    document.getElementById('optimizeBtn').disabled = selectedDepots.length === 0 || !scenarioData;
+  }
+
+  function addCustomDepot() {
+    const lat = parseFloat(document.getElementById('customLat').value);
+    const lon = parseFloat(document.getElementById('customLon').value);
+
+    if (isNaN(lat) || isNaN(lon)) {
+      alert('Please enter valid latitude and longitude values');
+      return;
+    }
+
+    // Add to selected depots
+    const depotId = 1000 + selectedDepots.length; // Simple ID generation
+    selectedDepots.push([lat, lon]);
+
+    // Clear inputs
+    document.getElementById('customLat').value = '';
+    document.getElementById('customLon').value = '';
+
+    updateOptimizeButton();
+  }
+
+  function generateScenario() {
+    // Show loading state
+    document.getElementById('generateScenarioBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+    document.getElementById('generateScenarioBtn').disabled = true;
+
+    fetch('/api/multi_depot/scenario/generate', {
+      method: 'POST'
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        scenarioData = data;
+        document.getElementById('optimizationResults').innerHTML = `
+        <div class="alert alert-success">
+          <h5><i class="fas fa-check-circle me-2"></i>Scenario Generated Successfully!</h5>
+          <p class="mb-1"><strong>${data.orders.length}</strong> orders created</p>
+          <p class="mb-1"><strong>${data.fleet.length}</strong> vehicles available</p>
+          <p class="mb-0"><strong>${data.depots.length}</strong> depot locations</p>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-striped table-sm">
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Count</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Orders</td>
+                <td>${data.orders.length}</td>
+                <td>Average weight: ${(data.orders.reduce((sum, o) => sum + o.weight_kg, 0) / data.orders.length).toFixed(1)} kg</td>
+              </tr>
+              <tr>
+                <td>Vehicles</td>
+                <td>${data.fleet.length}</td>
+                <td>Average capacity: ${(data.fleet.reduce((sum, v) => sum + v.capacity_kg, 0) / data.fleet.length).toFixed(0)} kg</td>
+              </tr>
+              <tr>
+                <td>Depots</td>
+                <td>${data.depots.length}</td>
+                <td>Geographically distributed</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+
+        updateOptimizeButton();
+      })
+      .catch(error => {
+        document.getElementById('optimizationResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Failed to generate scenario: ${error.message}
+        </div>
+      `;
+      })
+      .finally(() => {
+        document.getElementById('generateScenarioBtn').innerHTML = '<i class="fas fa-random me-1"></i>Generate Scenario';
+        document.getElementById('generateScenarioBtn').disabled = false;
+      });
+  }
+
+  function updateOptimizeButton() {
+    const optimizeBtn = document.getElementById('optimizeBtn');
+    optimizeBtn.disabled = selectedDepots.length === 0 || !scenarioData;
+  }
+
+  function runOptimization() {
+    if (selectedDepots.length === 0 || !scenarioData) {
+      alert('Please select at least one depot and generate a scenario first');
+      return;
+    }
+
+    // Show loading state
+    document.getElementById('optimizeBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Optimizing...';
+    document.getElementById('optimizeBtn').disabled = true;
+
+    // Filter depots based on selection
+    const selectedDepotCoords = [];
+    if (Array.isArray(selectedDepots[0])) {
+      // Custom depots
+      selectedDepotCoords.push(...selectedDepots);
+    } else {
+      // Predefined depots
+      const allDepots = [
+        [24.8607, 67.0011], // Karachi
+        [31.5204, 74.3587], // Lahore
+        [33.6844, 73.0479], // Islamabad
+        [33.5973, 73.0479], // Rawalpindi
+        [30.1956, 71.4753]  // Multan
+      ];
+      selectedDepots.forEach(id => {
+        if (id < allDepots.length) {
+          selectedDepotCoords.push(allDepots[id]);
+        }
+      });
+    }
+
+    // Prepare optimization data
+    const requestData = {
+      depots: selectedDepotCoords,
+      fleet: scenarioData.fleet,
+      orders: scenarioData.orders
+    };
+
+    fetch('/api/multi_depot/optimize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        displayOptimizationResults(data);
+        analyzeResults(data.routes);
+      })
+      .catch(error => {
+        document.getElementById('optimizationResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Optimization failed: ${error.message}
+        </div>
+      `;
+      })
+      .finally(() => {
+        document.getElementById('optimizeBtn').innerHTML = '<i class="fas fa-bolt me-1"></i>Run Optimization';
+        document.getElementById('optimizeBtn').disabled = false;
+      });
+  }
+
+  function displayOptimizationResults(data) {
+    const resultsContainer = document.getElementById('optimizationResults');
+
+    let resultsHTML = `
+      <div class="alert alert-success">
+        <h5><i class="fas fa-route me-2"></i>Optimization Complete!</h5>
+        <div class="row">
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${data.total_depots}</strong> depots</p>
+          </div>
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${data.total_vehicles_used}</strong> vehicles used</p>
+          </div>
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${data.total_orders_served}</strong> orders served</p>
+          </div>
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${data.routes.length}</strong> routes created</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Display routes by depot
+    const depotRoutes = {};
+    data.routes.forEach(route => {
+      const depotId = route.depot_id;
+      if (!depotRoutes[depotId]) {
+        depotRoutes[depotId] = [];
+      }
+      depotRoutes[depotId].push(route);
+    });
+
+    for (const [depotId, routes] of Object.entries(depotRoutes)) {
+      resultsHTML += `
+        <div class="card mb-3">
+          <div class="card-header bg-info text-white">
+            <h6 class="mb-0"><i class="fas fa-warehouse me-2"></i>Depot ${depotId} Routes</h6>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped table-sm">
+                <thead>
+                  <tr>
+                    <th>Vehicle</th>
+                    <th>Orders</th>
+                    <th>Distance</th>
+                    <th>Load</th>
+                    <th>Utilization</th>
+                  </tr>
+                </thead>
+                <tbody>
+      `;
+
+      routes.forEach(route => {
+        resultsHTML += `
+          <tr>
+            <td>${route.vehicle_id}</td>
+            <td>${route.route.length}</td>
+            <td>${(route.total_distance_m / 1000).toFixed(1)} km</td>
+            <td>${route.total_load_kg.toFixed(1)} / ${route.capacity_kg} kg</td>
+            <td>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-${getUtilizationColor(route.utilization_pct)}" 
+                     role="progressbar" style="width: ${route.utilization_pct}%;" 
+                     aria-valuenow="${route.utilization_pct}" aria-valuemin="0" aria-valuemax="100">
+                  ${route.utilization_pct}%
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      resultsHTML += `
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    resultsContainer.innerHTML = resultsHTML;
+  }
+
+  function analyzeResults(routes) {
+    fetch('/api/multi_depot/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ routes: routes })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        displayAnalysis(data);
+      })
+      .catch(error => {
+        document.getElementById('analysisResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Analysis failed: ${error.message}
+        </div>
+      `;
+      });
+  }
+
+  function displayAnalysis(data) {
+    const analysisContainer = document.getElementById('analysisResults');
+
+    let analysisHTML = `
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Summary Metrics</h6>
+            </div>
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Total Routes
+                  <span class="badge bg-primary rounded-pill">${data.summary.total_routes}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Total Distance
+                  <span class="badge bg-success rounded-pill">${data.summary.total_distance_km} km</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Total Load
+                  <span class="badge bg-warning rounded-pill">${data.summary.total_load_kg} kg</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Average Utilization
+                  <span class="badge bg-info rounded-pill">${data.summary.average_utilization_pct}%</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-warning text-dark">
+              <h6 class="mb-0"><i class="fas fa-star me-2"></i>Recommendations</h6>
+            </div>
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+    `;
+
+    data.recommendations.forEach(rec => {
+      analysisHTML += `<li class="list-group-item">${rec}</li>`;
+    });
+
+    analysisHTML += `
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card mt-3">
+        <div class="card-header bg-secondary text-white">
+          <h6 class="mb-0"><i class="fas fa-warehouse me-2"></i>Depot Utilization</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-sm">
+              <thead>
+                <tr>
+                  <th>Depot</th>
+                  <th>Routes</th>
+                  <th>Distance (km)</th>
+                  <th>Load (kg)</th>
+                  <th>Capacity (kg)</th>
+                  <th>Utilization</th>
+                </tr>
+              </thead>
+              <tbody>
+    `;
+
+    for (const [depotId, util] of Object.entries(data.depot_analysis)) {
+      const utilization = util.capacity > 0 ? (util.load / util.capacity * 100) : 0;
+      analysisHTML += `
+        <tr>
+          <td>Depot ${depotId}</td>
+          <td>${util.routes}</td>
+          <td>${(util.distance / 1000).toFixed(1)}</td>
+          <td>${util.load.toFixed(1)}</td>
+          <td>${util.capacity}</td>
+          <td>
+            <div class="progress" style="height: 15px;">
+              <div class="progress-bar bg-${getUtilizationColor(utilization)}" 
+                   role="progressbar" style="width: ${utilization}%;" 
+                   aria-valuenow="${utilization}" aria-valuemin="0" aria-valuemax="100">
+                ${utilization.toFixed(1)}%
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    analysisHTML += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    analysisContainer.innerHTML = analysisHTML;
+  }
+
+  function getUtilizationColor(utilization) {
+    if (utilization >= 90) return 'danger';
+    if (utilization >= 75) return 'warning';
+    if (utilization >= 50) return 'info';
+    return 'success';
+  }
+</script>
+{% endblock %}

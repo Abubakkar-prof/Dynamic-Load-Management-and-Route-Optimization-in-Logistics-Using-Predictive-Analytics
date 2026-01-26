@@ -1,0 +1,642 @@
+{% extends "base.html" %}
+
+{% block title %}3D Bin Packing{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">3D Volumetric Optimization</h2>
+    <p class="text-body mb-0 small">Maximize payload efficiency using Extreme Point Heuristics and spatial constraints.
+    </p>
+  </div>
+  <div class="d-flex gap-3">
+    <button id="generateScenarioBtn" class="btn btn-secondary py-2 px-4 shadow-sm border-white border-opacity-10">
+      <i class="fas fa-random me-2"></i>Synthesize Scenario
+    </button>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Configuration Sidebar -->
+  <div class="col-xl-4">
+    <div class="card mb-4">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+          <i class="fas fa-truck-ramp-box text-primary"></i>
+        </div>
+        <h6 class="fw-bold text-heading mb-0 small">Fleet Configuration</h6>
+      </div>
+
+      <div class="mb-4">
+        <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Asset Classes</label>
+        <div class="d-flex gap-2">
+          <select class="form-select flex-grow-1" id="vehicleTypeSelect">
+            <option value="">Select standard asset...</option>
+          </select>
+          <button id="addVehicleTypeBtn" class="btn btn-primary" title="Add Asset">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Manual Asset Entry</label>
+        <div class="row g-2 mb-2">
+          <div class="col-12">
+            <input type="text" class="form-control" id="customVehicleId" placeholder="Asset ID">
+          </div>
+          <div class="col-6">
+            <input type="number" class="form-control" id="customCapacity" placeholder="Payload (kg)">
+          </div>
+          <div class="col-6">
+            <input type="number" class="form-control" id="customWidth" placeholder="Width (m)">
+          </div>
+          <div class="col-6">
+            <input type="number" class="form-control" id="customHeight" placeholder="Height (m)">
+          </div>
+          <div class="col-6">
+            <input type="number" class="form-control" id="customDepth" placeholder="Depth (m)">
+          </div>
+        </div>
+        <button id="addCustomVehicleBtn" class="btn btn-secondary w-100 py-2">
+          <i class="fas fa-terminal me-2"></i>Provision Custom Asset
+        </button>
+      </div>
+
+      <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Active Fleet Index</label>
+      <div id="fleetList" class="bg-dark bg-opacity-25 rounded-4 p-2 border border-white border-opacity-5"
+        style="max-height: 250px; overflow-y: auto;">
+        <div class="text-center py-4 opacity-25">
+          <i class="fas fa-layer-group fa-2x mb-2"></i>
+          <p class="x-small mb-0">No active assets registered</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-warning bg-opacity-10 p-2 rounded-3 me-3">
+          <i class="fas fa-boxes-stacked text-warning"></i>
+        </div>
+        <h6 class="fw-bold text-heading mb-0 small">Item Specification</h6>
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-12">
+          <input type="text" class="form-control" id="packageId" placeholder="Item Identifier">
+        </div>
+        <div class="col-6">
+          <input type="number" class="form-control" id="packageWeight" placeholder="Mass (kg)">
+        </div>
+        <div class="col-6">
+          <input type="number" class="form-control" id="packageWidth" placeholder="W (m)">
+        </div>
+        <div class="col-6">
+          <input type="number" class="form-control" id="packageHeight" placeholder="H (m)">
+        </div>
+        <div class="col-6">
+          <input type="number" class="form-control" id="packageDepth" placeholder="D (m)">
+        </div>
+      </div>
+
+      <button id="addPackageBtn" class="btn btn-secondary w-100 py-2 mb-4">
+        <i class="fas fa-box me-2"></i>Register Item
+      </button>
+
+      <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Inventory Queue</label>
+      <div id="packagesList" class="bg-dark bg-opacity-25 rounded-4 p-2 border border-white border-opacity-5"
+        style="max-height: 250px; overflow-y: auto;">
+        <div class="text-center py-4 opacity-25">
+          <i class="fas fa-list-check fa-2x mb-2"></i>
+          <p class="x-small mb-0">Queue currently empty</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optimization Canvas -->
+  <div class="col-xl-8">
+    <div class="card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+          <div class="bg-success bg-opacity-10 p-2 rounded-3 me-3">
+            <i class="fas fa-microchip text-success"></i>
+          </div>
+          <h6 class="fw-bold text-heading mb-0 small">Optimization Engine Output</h6>
+        </div>
+        <button id="optimizeBtn" class="btn btn-primary px-4 py-2" disabled>
+          <i class="fas fa-bolt-lightning me-2"></i>Compute Solution
+        </button>
+      </div>
+
+      <div id="optimizationResults" class="flex-grow-1">
+        <div class="text-center py-5">
+          <div class="bg-dark bg-opacity-25 rounded-circle d-inline-flex p-4 mb-4 border border-white border-opacity-5">
+            <i class="fas fa-cubes-stacked fa-3x text-body opacity-25"></i>
+          </div>
+          <h5 class="text-heading fw-bold">Waiting for Input Parameters</h5>
+          <p class="text-body small mx-auto" style="max-width: 300px;">Populate your fleet and inventory queue to begin
+            volumetric computations.</p>
+        </div>
+      </div>
+
+      <!-- Analysis Dashboard (Hidden until optimized) -->
+      <div id="analysisResults" class="mt-4 pt-4 border-top border-white border-opacity-5" style="display: none;">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Global variables
+  let fleet = [];
+  let packages = [];
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Load vehicle types
+    loadVehicleTypes();
+
+    // Event listeners
+    document.getElementById('generateScenarioBtn').addEventListener('click', generateScenario);
+    document.getElementById('addVehicleTypeBtn').addEventListener('click', addSelectedVehicleType);
+    document.getElementById('addCustomVehicleBtn').addEventListener('click', addCustomVehicle);
+    document.getElementById('addPackageBtn').addEventListener('click', addPackage);
+    document.getElementById('optimizeBtn').addEventListener('click', runOptimization);
+  });
+
+  function loadVehicleTypes() {
+    fetch('/api/bin_packing/vehicle_types')
+      .then(response => response.json())
+      .then(data => {
+        const select = document.getElementById('vehicleTypeSelect');
+        select.innerHTML = '<option value="">Select a vehicle type...</option>';
+
+        data.vehicle_types.forEach(type => {
+          const option = document.createElement('option');
+          option.value = JSON.stringify(type);
+          option.textContent = `${type.type} - ${type.description}`;
+          select.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error('Failed to load vehicle types:', error);
+      });
+  }
+
+  function addSelectedVehicleType() {
+    const select = document.getElementById('vehicleTypeSelect');
+    const selectedValue = select.value;
+
+    if (!selectedValue) {
+      alert('Please select a vehicle type first');
+      return;
+    }
+
+    const vehicleType = JSON.parse(selectedValue);
+    const vehicleId = `${vehicleType.type}-${fleet.length + 1}`;
+
+    const vehicle = {
+      vehicle_id: vehicleId,
+      type: vehicleType.type,
+      width: vehicleType.width,
+      height: vehicleType.height,
+      depth: vehicleType.depth,
+      capacity_kg: vehicleType.capacity_kg
+    };
+
+    fleet.push(vehicle);
+    updateFleetList();
+    updateOptimizeButton();
+  }
+
+  function addCustomVehicle() {
+    const vehicleId = document.getElementById('customVehicleId').value || `CUSTOM-${fleet.length + 1}`;
+    const capacity = parseFloat(document.getElementById('customCapacity').value);
+    const width = parseFloat(document.getElementById('customWidth').value);
+    const height = parseFloat(document.getElementById('customHeight').value);
+    const depth = parseFloat(document.getElementById('customDepth').value);
+
+    if (isNaN(capacity) || isNaN(width) || isNaN(height) || isNaN(depth)) {
+      alert('Please fill in all vehicle dimensions and capacity');
+      return;
+    }
+
+    const vehicle = {
+      vehicle_id: vehicleId,
+      type: 'Custom',
+      width: width,
+      height: height,
+      depth: depth,
+      capacity_kg: capacity
+    };
+
+    fleet.push(vehicle);
+    updateFleetList();
+    updateOptimizeButton();
+
+    // Clear inputs
+    document.getElementById('customVehicleId').value = '';
+    document.getElementById('customCapacity').value = '';
+    document.getElementById('customWidth').value = '';
+    document.getElementById('customHeight').value = '';
+    document.getElementById('customDepth').value = '';
+  }
+
+  function addPackage() {
+    const packageId = document.getElementById('packageId').value || `PKG-${packages.length + 1}`;
+    const weight = parseFloat(document.getElementById('packageWeight').value);
+    const width = parseFloat(document.getElementById('packageWidth').value);
+    const height = parseFloat(document.getElementById('packageHeight').value);
+    const depth = parseFloat(document.getElementById('packageDepth').value);
+
+    if (isNaN(weight) || isNaN(width) || isNaN(height) || isNaN(depth)) {
+      alert('Please fill in all package dimensions and weight');
+      return;
+    }
+
+    const pkg = {
+      order_id: packageId,
+      weight_kg: weight,
+      package_width: width,
+      package_height: height,
+      package_depth: depth
+    };
+
+    packages.push(pkg);
+    updatePackagesList();
+    updateOptimizeButton();
+
+    // Clear inputs
+    document.getElementById('packageId').value = '';
+    document.getElementById('packageWeight').value = '';
+    document.getElementById('packageWidth').value = '';
+    document.getElementById('packageHeight').value = '';
+    document.getElementById('packageDepth').value = '';
+  }
+
+  function updateFleetList() {
+    const fleetList = document.getElementById('fleetList');
+
+    if (fleet.length === 0) {
+      fleetList.innerHTML = `
+        <div class="text-center py-3 text-muted">
+          <i class="fas fa-truck-loading fa-2x mb-2"></i>
+          <p class="mb-0">No vehicles added yet</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '<div class="list-group">';
+    fleet.forEach((vehicle, index) => {
+      html += `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>${vehicle.vehicle_id}</strong>
+            <br>
+            <small class="text-muted">${vehicle.type} - ${vehicle.capacity_kg}kg</small>
+          </div>
+          <div class="text-end">
+            <small class="text-muted">${vehicle.width}×${vehicle.height}×${vehicle.depth}m</small>
+            <br>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeVehicle(${index})">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+
+    fleetList.innerHTML = html;
+  }
+
+  function updatePackagesList() {
+    const packagesList = document.getElementById('packagesList');
+
+    if (packages.length === 0) {
+      packagesList.innerHTML = `
+        <div class="text-center py-3 text-muted">
+          <i class="fas fa-boxes fa-2x mb-2"></i>
+          <p class="mb-0">No packages added yet</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '<div class="list-group">';
+    packages.forEach((pkg, index) => {
+      const volume = (pkg.package_width * pkg.package_height * pkg.package_depth).toFixed(3);
+      html += `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>${pkg.order_id}</strong>
+            <br>
+            <small class="text-muted">${pkg.weight_kg}kg - ${volume}m³</small>
+          </div>
+          <div>
+            <button class="btn btn-sm btn-outline-danger" onclick="removePackage(${index})">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+
+    packagesList.innerHTML = html;
+  }
+
+  function removeVehicle(index) {
+    fleet.splice(index, 1);
+    updateFleetList();
+    updateOptimizeButton();
+  }
+
+  function removePackage(index) {
+    packages.splice(index, 1);
+    updatePackagesList();
+    updateOptimizeButton();
+  }
+
+  function updateOptimizeButton() {
+    document.getElementById('optimizeBtn').disabled = fleet.length === 0 || packages.length === 0;
+  }
+
+  function generateScenario() {
+    // Show loading state
+    document.getElementById('generateScenarioBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+    document.getElementById('generateScenarioBtn').disabled = true;
+
+    fetch('/api/bin_packing/scenario/generate', {
+      method: 'POST'
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // Populate fleet and packages
+        fleet = data.fleet;
+        packages = data.orders;
+
+        updateFleetList();
+        updatePackagesList();
+        updateOptimizeButton();
+
+        document.getElementById('optimizationResults').innerHTML = `
+        <div class="alert alert-success">
+          <h5><i class="fas fa-check-circle me-2"></i>Scenario Generated Successfully!</h5>
+          <p class="mb-1"><strong>${fleet.length}</strong> vehicles configured</p>
+          <p class="mb-0"><strong>${packages.length}</strong> packages ready for packing</p>
+        </div>
+      `;
+      })
+      .catch(error => {
+        document.getElementById('optimizationResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Failed to generate scenario: ${error.message}
+        </div>
+      `;
+      })
+      .finally(() => {
+        document.getElementById('generateScenarioBtn').innerHTML = '<i class="fas fa-random me-1"></i>Generate Scenario';
+        document.getElementById('generateScenarioBtn').disabled = false;
+      });
+  }
+
+  function runOptimization() {
+    if (fleet.length === 0 || packages.length === 0) {
+      alert('Please add at least one vehicle and one package');
+      return;
+    }
+
+    // Show loading state
+    document.getElementById('optimizeBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Optimizing...';
+    document.getElementById('optimizeBtn').disabled = true;
+
+    const requestData = {
+      fleet: fleet,
+      orders: packages
+    };
+
+    fetch('/api/bin_packing/optimize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        displayOptimizationResults(data.results);
+        analyzeResults(data.results);
+      })
+      .catch(error => {
+        document.getElementById('optimizationResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Optimization failed: ${error.message}
+        </div>
+      `;
+      })
+      .finally(() => {
+        document.getElementById('optimizeBtn').innerHTML = '<i class="fas fa-bolt me-1"></i>Run Optimization';
+        document.getElementById('optimizeBtn').disabled = false;
+      });
+  }
+
+  function displayOptimizationResults(results) {
+    const resultsContainer = document.getElementById('optimizationResults');
+
+    const stats = results.statistics;
+
+    let resultsHTML = `
+      <div class="alert alert-success">
+        <h5><i class="fas fa-puzzle-piece me-2"></i>Optimization Complete!</h5>
+        <div class="row">
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${stats.total_items}</strong> packages</p>
+          </div>
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${stats.packed_items}</strong> packed</p>
+          </div>
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${stats.unpacked_items}</strong> unpacked</p>
+          </div>
+          <div class="col-md-3">
+            <p class="mb-1"><strong>${stats.packing_efficiency.toFixed(1)}%</strong> efficiency</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Display per-vehicle results
+    results.packing_results.forEach((binResult, index) => {
+      const binInfo = binResult.bin;
+      const utilizationClass = getUtilizationClass(binInfo.volume_utilization);
+
+      resultsHTML += `
+        <div class="card mb-3">
+          <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fas fa-truck me-2"></i>Vehicle ${binInfo.bin_id}</h6>
+            <span class="badge bg-${utilizationClass}">${binInfo.volume_utilization.toFixed(1)}% Utilization</span>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Items:</strong> ${binInfo.item_count}</p>
+                <p class="mb-1"><strong>Weight:</strong> ${binInfo.current_weight.toFixed(1)}/${binInfo.max_weight} kg</p>
+                <p class="mb-1"><strong>Weight Utilization:</strong> ${binInfo.weight_utilization.toFixed(1)}%</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Volume Utilization:</strong> ${binInfo.volume_utilization.toFixed(1)}%</p>
+                <p class="mb-1"><strong>Remaining Volume:</strong> ${binInfo.remaining_volume.toFixed(2)} m³</p>
+                <p class="mb-1"><strong>Remaining Weight:</strong> ${binInfo.remaining_weight.toFixed(1)} kg</p>
+              </div>
+            </div>
+            
+            <div class="mt-3">
+              <h6>Packed Items (${binResult.packed_items.length}):</h6>
+              <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Dimensions</th>
+                      <th>Weight</th>
+                      <th>Volume</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+      `;
+
+      binResult.packed_items.forEach(item => {
+        resultsHTML += `
+          <tr>
+            <td>${item.item_id}</td>
+            <td>${item.width}×${item.height}×${item.depth}m</td>
+            <td>${item.weight}kg</td>
+            <td>${item.volume.toFixed(3)}m³</td>
+          </tr>
+        `;
+      });
+
+      resultsHTML += `
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    resultsContainer.innerHTML = resultsHTML;
+  }
+
+  function analyzeResults(results) {
+    fetch('/api/bin_packing/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ results: results })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        displayAnalysis(data);
+      })
+      .catch(error => {
+        document.getElementById('analysisResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Analysis failed: ${error.message}
+        </div>
+      `;
+      });
+  }
+
+  function displayAnalysis(data) {
+    const analysisContainer = document.getElementById('analysisResults');
+
+    let analysisHTML = `
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Summary Metrics</h6>
+            </div>
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Total Vehicles
+                  <span class="badge bg-primary rounded-pill">${data.summary.total_vehicles}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Total Packages
+                  <span class="badge bg-success rounded-pill">${data.summary.total_items}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Packed Packages
+                  <span class="badge bg-info rounded-pill">${data.summary.packed_items}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Packing Efficiency
+                  <span class="badge bg-warning rounded-pill">${data.summary.packing_efficiency.toFixed(1)}%</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Avg Volume Utilization
+                  <span class="badge bg-secondary rounded-pill">${data.summary.average_volume_utilization.toFixed(1)}%</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-warning text-dark">
+              <h6 class="mb-0"><i class="fas fa-star me-2"></i>Recommendations</h6>
+            </div>
+            <div class="card-body">
+              <ul class="list-group list-group-flush">
+    `;
+
+    data.recommendations.forEach(rec => {
+      analysisHTML += `<li class="list-group-item">${rec}</li>`;
+    });
+
+    if (data.recommendations.length === 0) {
+      analysisHTML += `<li class="list-group-item">Optimization looks balanced. All vehicles are well-utilized.</li>`;
+    }
+
+    analysisHTML += `
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    analysisContainer.innerHTML = analysisHTML;
+  }
+
+  function getUtilizationClass(utilization) {
+    if (utilization >= 90) return 'danger';
+    if (utilization >= 75) return 'warning';
+    if (utilization >= 50) return 'info';
+    return 'success';
+  }
+</script>
+{% endblock %}

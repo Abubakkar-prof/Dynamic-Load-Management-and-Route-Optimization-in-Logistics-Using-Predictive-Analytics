@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Live Telemetry - Logistics AI{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Live Fleet Telemetry</h2>
+        <p class="text-body mb-0 small">Real-time tracking and monitoring of active delivery vehicles.</p>
+    </div>
+    <div class="d-flex gap-3">
+        <button id="refresh-btn" class="btn btn-secondary py-2 px-4 shadow-sm">
+            <i class="fas fa-sync me-2"></i>Refresh
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h6 class="text-uppercase text-body x-small fw-bold mb-4">Fleet Map</h6>
+            <div id="map" style="height: 500px; border-radius: 12px; overflow: hidden;"></div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card p-4">
+            <h6 class="text-uppercase text-body x-small fw-bold mb-4">Active Vehicles</h6>
+            <div id="vehicle-list">
+                <div class="text-center py-5 text-body opacity-50">
+                    <i class="fas fa-circle-notch fa-spin me-2"></i>Loading vehicles...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Leaflet Map
+    const map = L.map('map').setView([31.5204, 74.3587], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const markers = {};
+
+    function loadVehicles() {
+        fetch('{{ url_for("vehicles.api_vehicles") }}')
+            .then(res => res.json())
+            .then(data => {
+                const listContainer = document.getElementById('vehicle-list');
+                listContainer.innerHTML = '';
+
+                if (data.length === 0) {
+                    listContainer.innerHTML = '<div class="text-body opacity-50 text-center py-3">No active vehicles</div>';
+                    return;
+                }
+
+                data.forEach(vehicle => {
+                    // Add to list
+                    const statusColor = vehicle.status === 'On Route' ? 'success' : 'secondary';
+                    listContainer.innerHTML += `
+                        <div class="border-bottom border-secondary border-opacity-25 py-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-heading">${vehicle.vehicle_id}</span>
+                                <span class="badge bg-${statusColor} bg-opacity-10 text-${statusColor} x-small">${vehicle.status}</span>
+                            </div>
+                            <div class="x-small text-body">
+                                Type: ${vehicle.type} | Capacity: ${vehicle.capacity_kg}kg
+                            </div>
+                        </div>
+                    `;
+
+                    // Add to map if has location
+                    if (vehicle.current_location_lat && vehicle.current_location_lon) {
+                        const lat = parseFloat(vehicle.current_location_lat);
+                        const lon = parseFloat(vehicle.current_location_lon);
+
+                        if (markers[vehicle.vehicle_id]) {
+                            markers[vehicle.vehicle_id].setLatLng([lat, lon]);
+                        } else {
+                            const icon = L.divIcon({
+                                className: 'custom-marker',
+                                html: `<div style="background: #3b82f6; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                                    <i class="fas fa-truck"></i> ${vehicle.vehicle_id}
+                                </div>`,
+                                iconSize: [100, 40]
+                            });
+
+                            markers[vehicle.vehicle_id] = L.marker([lat, lon], { icon: icon })
+                                .addTo(map)
+                                .bindPopup(`<b>${vehicle.vehicle_id}</b><br>Status: ${vehicle.status}`);
+                        }
+                    }
+                });
+            })
+            .catch(err => console.error(err));
+    }
+
+    // Load vehicles on page load
+    loadVehicles();
+
+    // Refresh button
+    document.getElementById('refresh-btn').addEventListener('click', loadVehicles);
+
+    // Auto-refresh every 5 seconds
+    setInterval(loadVehicles, 5000);
+</script>
+{% endblock %}

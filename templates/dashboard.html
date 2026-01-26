@@ -4,202 +4,301 @@
 
 {% block extra_css %}
 <style>
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .stat-card {
+        padding: 1.5rem;
+        background: var(--bg-surface);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-default);
+        border-radius: 20px;
+        transition: all 0.3s ease;
     }
-    
+
+    .stat-card:hover {
+        border-color: var(--brand-primary);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-body);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-heading);
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+
+    .stat-change {
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .map-container-pro {
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid var(--border-default);
+        background: var(--bg-surface);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        margin-bottom: 2.5rem;
+    }
+
     #map {
         height: 500px;
-        border-radius: 12px;
-        z-index: 1;
+        filter: grayscale(1) invert(0.9) contrast(1.2);
     }
-    
-    .loading-overlay {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(15, 23, 42, 0.8);
+
+    .section-header {
         display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 100;
-        display: none;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 2.5rem;
+    }
+
+    .chart-container-pro {
+        padding: 1.5rem;
+        background: var(--bg-surface);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-default);
+        border-radius: 20px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Header -->
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="section-header">
     <div>
-        <h2 class="fw-bold mb-1">Overview</h2>
-        <p class="text-muted mb-0">Real-time fleet monitoring and demand forecasting.</p>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Operational Intelligence</h2>
+        <p class="text-body mb-0 small">Real-time fleet synchronization and predictive demand analysis.</p>
     </div>
-    <a href="{{ url_for('orders.list_orders') }}" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold">
-        <i class="fas fa-box me-2"></i>Manage Orders
-    </a>
-</div>
-
-<!-- KPI Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card h-100 p-4">
-            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Predicted Demand (7 Days)</div>
-            <div class="stat-value" id="forecast-vol">-</div>
-            <div class="text-success small mt-2"><i class="fas fa-arrow-up me-1"></i>High Confidence</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card h-100 p-4">
-            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Active Fleet</div>
-            <div class="stat-value" id="active-fleet">-</div>
-            <div class="text-muted small mt-2">Vehicles Available</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card h-100 p-4">
-            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Fleet Capacity</div>
-            <div class="stat-value" id="fleet-cap">-</div>
-            <div class="text-muted small mt-2">Total Kg Capacity</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card h-100 p-4">
-            <div class="card-title mb-2" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Pending Orders</div>
-            <div class="stat-value" id="pending-orders">-</div>
-            <div class="text-muted small mt-2">Awaiting Assignment</div>
-        </div>
+    <div class="d-flex gap-3">
+        <a href="#" class="btn btn-primary py-2 px-4 shadow-sm">
+            <i class="fas fa-plus me-2"></i>New Dispatch
+        </a>
     </div>
 </div>
 
-<!-- Dashboard Grid -->
-<div class="row g-4">
-    <!-- Chart Section -->
-    <div class="col-lg-6">
-        <div class="card p-4 h-100">
-            <h6 class="card-title mb-4" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Demand Forecast</h6>
-            <canvas id="demandChart"></canvas>
-            
-            <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
-                <h6 class="card-title mb-3" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Recent Alerts</h6>
-                <div class="d-flex align-items-start mb-3">
-                    <div class="bg-warning bg-opacity-10 p-2 rounded me-3 text-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div>
-                        <div class="small fw-bold">High Demand in North Region</div>
-                        <div class="text-muted small" style="font-size: 0.8rem;">Predicted 20% spike tomorrow.</div>
-                    </div>
-                </div>
+<!-- KPI Grid -->
+<div class="row g-4 mb-5">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-label">Projected Demand</div>
+            <h3 class="stat-value" id="forecast-vol">-</h3>
+            <div class="stat-change text-success">
+                <i class="fas fa-arrow-up"></i><span>12.5%</span>
+                <span class="text-body opacity-50 ms-1 fw-normal">vs last week</span>
             </div>
         </div>
     </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                <i class="fas fa-truck-container"></i>
+            </div>
+            <div class="stat-label">Active Assets</div>
+            <h3 class="stat-value" id="active-fleet">-</h3>
+            <div class="stat-change text-success">
+                <i class="fas fa-signal"></i><span>Full Coverage</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-info bg-opacity-10 text-info">
+                <i class="fas fa-weight-scale"></i>
+            </div>
+            <div class="stat-label">Fleet Capacity</div>
+            <h3 class="stat-value" id="fleet-cap">-</h3>
+            <div class="stat-change text-info">
+                <i class="fas fa-microchip"></i><span>Optimized</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                <i class="fas fa-clock-rotate-left"></i>
+            </div>
+            <div class="stat-label">Pending Queue</div>
+            <h3 class="stat-value" id="pending-orders">-</h3>
+            <div class="stat-change text-warning">
+                <i class="fas fa-triangle-exclamation"></i><span>Priority Check</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- Quick Stats Section -->
-    <div class="col-lg-6">
-        <div class="card p-4 h-100">
-            <h6 class="card-title mb-4" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Quick Stats</h6>
-            
+<!-- Operations Map -->
+<div class="map-container-pro">
+    <div
+        class="px-4 py-3 border-bottom border-white border-opacity-5 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-heading small">Live Telemetry Map</h6>
+        <div class="badge bg-success bg-opacity-10 text-success border-0 rounded-pill x-small px-3">
+            <i class="fas fa-circle me-1" style="font-size: 5px;"></i>System Online
+        </div>
+    </div>
+    <div id="map"></div>
+</div>
+
+<!-- Secondary Analytics -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-8">
+        <div class="chart-container-pro h-100">
+            <h6 class="fw-bold text-heading small mb-4">Demand Projection Analysis</h6>
+            <canvas id="demandChart" style="max-height: 280px;"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-container-pro h-100">
+            <h6 class="fw-bold text-heading small mb-4">Resource Saturation</h6>
             <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted">Today's Orders</span>
-                    <strong id="today-orders">-</strong>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="x-small text-body">Fleet Utilization</span>
+                    <span class="x-small text-heading fw-bold" id="fleet-util">-</span>
                 </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: 70%;" id="today-progress"></div>
+                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                    <div class="progress-bar bg-primary" id="util-progress"></div>
                 </div>
             </div>
-            
             <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted">Fleet Utilization</span>
-                    <strong id="fleet-util">-</strong>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="x-small text-body">Daily Throughput</span>
+                    <span class="x-small text-heading fw-bold" id="today-orders">-</span>
                 </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" id="util-progress"></div>
+                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                    <div class="progress-bar bg-success" id="today-progress" style="width: 70%;"></div>
                 </div>
             </div>
-            
-            <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
-                <h6 class="card-title mb-3" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">System Status</h6>
-                <div class="d-flex align-items-center mb-2">
-                    <i class="fas fa-circle text-success me-2" style="font-size: 0.5rem;"></i>
-                    <span class="small">Database: Connected</span>
+            <div class="pt-4 border-top border-white border-opacity-5 mt-auto">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="bg-success rounded-circle" style="width: 6px; height: 6px;"></div>
+                    <span class="x-small">AI Engine Active</span>
                 </div>
-                <div class="d-flex align-items-center mb-2">
-                    <i class="fas fa-circle text-success me-2" style="font-size: 0.5rem;"></i>
-                    <span class="small">ML Model: Active</span>
-                </div>
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-circle text-warning me-2" style="font-size: 0.5rem;"></i>
-                    <span class="small">Route Optimizer: Offline</span>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary rounded-circle" style="width: 6px; height: 6px;"></div>
+                    <span class="x-small">Latency: 0.4ms</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Load Stats
-fetch('/api/stats')
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById('forecast-vol').textContent = data.forecast_volume || '0';
-        document.getElementById('active-fleet').textContent = data.active_vehicles || '0';
-        document.getElementById('fleet-cap').textContent = (data.fleet_capacity_kg || '0') + ' kg';
-        document.getElementById('pending-orders').textContent = data.pending_orders || '0';
-        document.getElementById('today-orders').textContent = data.total_orders_today || '0';
-        
-        // Calculate utilization
-        const util = data.total_vehicles > 0 ? Math.round((data.active_vehicles / data.total_vehicles) * 100) : 0;
-        document.getElementById('fleet-util').textContent = util + '%';
-        document.getElementById('util-progress').style.width = util + '%';
-    })
-    .catch(err => console.error('Error loading stats:', err));
+    // Initialize Map
+    const map = L.map('map').setView([31.5204, 74.3587], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO'
+    }).addTo(map);
 
-// Load Chart
-fetch('/api/forecast_chart')
-    .then(res => res.json())
-    .then(data => {
-        const ctx = document.getElementById('demandChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.labels || [],
-                datasets: [{
-                    label: 'Orders',
-                    data: data.values || [],
-                    borderColor: '#4361ee',
-                    backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { 
-                    legend: { display: false } 
+    // Custom Vehicle Icon
+    const vehicleIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: "<div style='background-color:#4361ee; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #4361ee;'></div>",
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+    });
+
+    const markers = {};
+
+    // SocketIO Connection
+    const socket = io();
+    socket.on('connect', () => console.log('Connected to Live Telemetry'));
+
+    socket.on('location_update', (data) => {
+        const { vehicle_id, lat, lng, status } = data;
+
+        if (markers[vehicle_id]) {
+            markers[vehicle_id].setLatLng([lat, lng]);
+        } else {
+            markers[vehicle_id] = L.marker([lat, lng], { icon: vehicleIcon })
+                .addTo(map)
+                .bindPopup(`<strong>Vehicle: ${vehicle_id}</strong><br>Status: ${status}`);
+        }
+    });
+
+    // Load Stats
+    fetch('/api/stats')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('forecast-vol').textContent = data.forecast_volume || '0';
+            document.getElementById('active-fleet').textContent = data.active_vehicles || '0';
+            document.getElementById('fleet-cap').textContent = (data.fleet_capacity_kg || '0') + ' kg';
+            document.getElementById('pending-orders').textContent = data.pending_orders || '0';
+            document.getElementById('today-orders').textContent = data.total_orders_today || '0';
+
+            // Calculate utilization
+            const util = data.total_vehicles > 0 ? Math.round((data.active_vehicles / data.total_vehicles) * 100) : 0;
+            document.getElementById('fleet-util').textContent = util + '%';
+            document.getElementById('util-progress').style.width = util + '%';
+        })
+        .catch(err => console.error('Error loading stats:', err));
+
+    // Load Chart
+    fetch('/api/forecast_chart')
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById('demandChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: 'Orders',
+                        data: data.values || [],
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
                 },
-                scales: {
-                    y: { 
-                        grid: { color: 'rgba(255,255,255,0.05)' }, 
-                        ticks: { color: '#94a3b8' } 
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
                     },
-                    x: { 
-                        grid: { display: false }, 
-                        ticks: { color: '#94a3b8' } 
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
                     }
                 }
-            }
-        });
-    })
-    .catch(err => console.error('Error loading chart:', err));
+            });
+        })
+        .catch(err => console.error('Error loading chart:', err));
 </script>
 {% endblock %}

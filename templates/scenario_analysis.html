@@ -1,0 +1,703 @@
+{% extends "base.html" %}
+
+{% block title %}Scenario Analysis{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Simulated Logistics Intelligence</h2>
+    <p class="text-body mb-0 small">"What-If" operational modeling and contingency risk assessment.</p>
+  </div>
+  <div class="d-flex gap-3">
+    <button id="loadBaselineBtn" class="btn btn-secondary py-2 px-4 shadow-sm border-white border-opacity-10">
+      <i class="fas fa-database me-2"></i>Synchronize Baseline Data
+    </button>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Configuration -->
+  <div class="col-xl-4">
+    <div class="card mb-4">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+          <i class="fas fa-folder-tree text-primary"></i>
+        </div>
+        <h6 class="fw-bold text-heading mb-0 small">Simulation Templates</h6>
+      </div>
+
+      <div id="scenarioTemplates"
+        class="list-group list-group-flush rounded-4 overflow-hidden border border-white border-opacity-5">
+        <div class="text-center py-5 opacity-25">
+          <i class="fas fa-layer-group fa-2x mb-2"></i>
+          <p class="x-small mb-0">No active templates detected</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-warning bg-opacity-10 p-2 rounded-3 me-3">
+          <i class="fas fa-screwdriver-wrench text-warning"></i>
+        </div>
+        <h6 class="fw-bold text-heading mb-0 small">Parameter Configuration</h6>
+      </div>
+
+      <div id="scenarioConfig">
+        <div
+          class="text-center py-4 bg-dark bg-opacity-25 rounded-4 border border-dashed border-white border-opacity-10">
+          <i class="fas fa-hand-pointer mb-2 text-white opacity-75"></i>
+          <p class="x-small mb-0 px-4 text-white opacity-75">Select a simulation template to modify operational
+            variables.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="col-xl-8">
+    <div class="card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+          <div class="bg-success bg-opacity-10 p-2 rounded-3 me-3">
+            <i class="fas fa-vial-circle-check text-success"></i>
+          </div>
+          <h6 class="fw-bold text-heading mb-0 small">Inference Results & Impact</h6>
+        </div>
+        <div class="d-flex gap-2">
+          <button id="runScenarioBtn" class="btn btn-primary px-4 py-2" disabled>
+            <i class="fas fa-play me-2"></i>Execute Simulation
+          </button>
+          <button id="compareScenariosBtn" class="btn btn-secondary px-3 py-2" disabled>
+            <i class="fas fa-columns me-2"></i>Compare
+          </button>
+        </div>
+      </div>
+
+      <div id="analysisResults" class="flex-grow-1">
+        <div class="text-center py-5">
+          <div class="bg-dark bg-opacity-25 rounded-circle d-inline-flex p-4 mb-4 border border-white border-opacity-5">
+            <i class="fas fa-chart-area fa-3x text-white opacity-25"></i>
+          </div>
+          <h5 class="text-white fw-bold">Ready for Execution</h5>
+          <p class="text-white opacity-75 small mx-auto" style="max-width: 300px;">Configure your parameters and execute
+            the
+            simulation to generate a risk impact analysis.</p>
+        </div>
+      </div>
+
+      <div id="scenarioHistory" class="mt-4 pt-4 border-top border-white border-opacity-5">
+        <!-- History populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-2">
+  <div class="col-12">
+    <div class="card">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-danger bg-opacity-10 p-2 rounded-3 me-3">
+          <i class="fas fa-shield-halved text-danger"></i>
+        </div>
+        <h6 class="fw-bold text-heading mb-0 small">Operational Risk Assessment Matrix</h6>
+      </div>
+      <div id="riskAssessment">
+        <div class="text-center py-5">
+          <p class="small mb-0 text-white opacity-75">Matrix data will populate upon successful simulation execution.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Global variables
+  let scenarioTemplates = [];
+  let selectedScenario = null;
+  let scenarioHistory = [];
+  let baselineData = null;
+  const csrfToken = "{{ csrf_token() }}";
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Load scenario templates
+    loadScenarioTemplates();
+
+    // Load baseline data
+    loadBaselineData();
+
+    // Event listeners
+    document.getElementById('loadBaselineBtn').addEventListener('click', loadBaselineData);
+    document.getElementById('runScenarioBtn').addEventListener('click', runScenario);
+    document.getElementById('compareScenariosBtn').addEventListener('click', compareScenarios);
+  });
+
+  function loadScenarioTemplates() {
+    fetch('/api/scenario/templates')
+      .then(response => response.json())
+      .then(data => {
+        scenarioTemplates = data.templates;
+        displayScenarioTemplates();
+      })
+      .catch(error => {
+        document.getElementById('scenarioTemplates').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Failed to load templates: ${error.message}
+        </div>
+      `;
+      });
+  }
+
+  function displayScenarioTemplates() {
+    const container = document.getElementById('scenarioTemplates');
+
+    if (scenarioTemplates.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-3 text-muted">
+          <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+          <p class="mb-0">No scenario templates available</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    scenarioTemplates.forEach(template => {
+      html += `
+        <a href="#" class="list-group-item list-group-item-action" onclick="selectScenario('${template.id}')">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">${template.name}</h6>
+              <p class="mb-1 text-muted"><small>${template.description}</small></p>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </a>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function selectScenario(templateId) {
+    selectedScenario = scenarioTemplates.find(t => t.id === templateId);
+
+    if (!selectedScenario) {
+      alert('Scenario template not found');
+      return;
+    }
+
+    displayScenarioConfiguration();
+    updateRunButton();
+  }
+
+  function displayScenarioConfiguration() {
+    const container = document.getElementById('scenarioConfig');
+
+    if (!selectedScenario) {
+      container.innerHTML = `
+        <div class="text-center py-3 text-muted">
+          <i class="fas fa-info-circle fa-2x mb-2"></i>
+          <p class="mb-0">Select a scenario template to configure parameters</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `
+      <h6 class="text-white">${selectedScenario.name}</h6>
+      <p class="text-white opacity-75"><small>${selectedScenario.description}</small></p>
+      <form id="scenarioForm">
+    `;
+
+    selectedScenario.parameters.forEach(param => {
+      html += `
+        <div class="mb-3">
+          <label class="form-label text-white opacity-90 small text-uppercase fw-bold letter-spacing-1">${param.label}</label>
+      `;
+
+      if (param.type === 'select') {
+        html += `<select class="form-select" id="param_${param.name}">`;
+        param.options.forEach(option => {
+          const selected = option === param.default ? 'selected' : '';
+          html += `<option value="${option}" ${selected}>${option}</option>`;
+        });
+        html += `</select>`;
+      } else if (param.type === 'multiselect') {
+        html += `<select class="form-select" id="param_${param.name}" multiple>`;
+        param.options.forEach(option => {
+          const selected = param.default.includes(option) ? 'selected' : '';
+          html += `<option value="${option}" ${selected}>${option}</option>`;
+        });
+        html += `</select>`;
+      } else if (param.type === 'number') {
+        html += `<input type="number" class="form-control" id="param_${param.name}" value="${param.default}" 
+                 ${param.min !== undefined ? `min="${param.min}"` : ''}
+                 ${param.max !== undefined ? `max="${param.max}"` : ''}
+                 ${param.step !== undefined ? `step="${param.step}"` : ''}>`;
+      } else {
+        html += `<input type="text" class="form-control" id="param_${param.name}" value="${param.default}">`;
+      }
+
+      html += `</div>`;
+    });
+
+    html += `</form>`;
+    container.innerHTML = html;
+  }
+
+  function loadBaselineData() {
+    // Show loading state
+    document.getElementById('loadBaselineBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
+    document.getElementById('loadBaselineBtn').disabled = true;
+
+    fetch('/api/scenario/baseline')
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        baselineData = data.baseline_data;
+
+        document.getElementById('analysisResults').innerHTML = `
+        <div class="alert alert-info">
+          <h5><i class="fas fa-database me-2"></i>Current Operational Data Loaded</h5>
+          <div class="row">
+            <div class="col-md-3">
+              <p class="mb-1"><strong>${baselineData.vehicles.length}</strong> vehicles</p>
+            </div>
+            <div class="col-md-3">
+              <p class="mb-1"><strong>${baselineData.drivers.length}</strong> drivers</p>
+            </div>
+            <div class="col-md-3">
+              <p class="mb-1"><strong>${baselineData.orders.length}</strong> orders</p>
+            </div>
+            <div class="col-md-3">
+              <p class="mb-1"><strong>${baselineData.routes.length}</strong> routes</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+        updateRunButton();
+      })
+      .catch(error => {
+        document.getElementById('analysisResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Failed to load baseline data: ${error.message}
+        </div>
+      `;
+      })
+      .finally(() => {
+        document.getElementById('loadBaselineBtn').innerHTML = '<i class="fas fa-sync-alt me-1"></i>Load Current Data';
+        document.getElementById('loadBaselineBtn').disabled = false;
+      });
+  }
+
+  function updateRunButton() {
+    const runBtn = document.getElementById('runScenarioBtn');
+    runBtn.disabled = !selectedScenario || !baselineData;
+  }
+
+  function runScenario() {
+    if (!selectedScenario || !baselineData) {
+      alert('Please select a scenario and load baseline data first');
+      return;
+    }
+
+    // Collect parameters
+    const parameters = {};
+    selectedScenario.parameters.forEach(param => {
+      const element = document.getElementById(`param_${param.name}`);
+      if (element) {
+        if (param.type === 'multiselect') {
+          const selectedOptions = Array.from(element.selectedOptions).map(option => option.value);
+          parameters[param.name] = selectedOptions;
+        } else {
+          parameters[param.name] = element.value;
+          // Convert to number if it's a numeric parameter
+          if (param.type === 'number') {
+            parameters[param.name] = parseFloat(parameters[param.name]);
+          }
+        }
+      }
+    });
+
+    // Show loading state
+    document.getElementById('runScenarioBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Running...';
+    document.getElementById('runScenarioBtn').disabled = true;
+
+    const requestData = {
+      scenario_type: selectedScenario.id,
+      parameters: parameters,
+      baseline_data: baselineData
+    };
+
+    fetch('/api/scenario/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify(requestData)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        displayScenarioResults(data.result);
+        addToScenarioHistory(selectedScenario.name, data.result);
+        getRecommendations(data.result);
+      })
+      .catch(error => {
+        document.getElementById('analysisResults').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Scenario analysis failed: ${error.message}
+        </div>
+      `;
+      })
+      .finally(() => {
+        document.getElementById('runScenarioBtn').innerHTML = '<i class="fas fa-play me-1"></i>Run Scenario';
+        document.getElementById('runScenarioBtn').disabled = false;
+      });
+  }
+
+  function displayScenarioResults(result) {
+    const resultsContainer = document.getElementById('analysisResults');
+
+    if (result.error) {
+      resultsContainer.innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Scenario failed: ${result.error}
+        </div>
+      `;
+      return;
+    }
+
+    let html = `
+      <div class="alert alert-success">
+        <h5><i class="fas fa-check-circle me-2"></i>Scenario Analysis Complete</h5>
+        <div class="row">
+    `;
+
+    // Display key metrics
+    if (result.affected_orders !== undefined) {
+      html += `
+        <div class="col-md-3">
+          <p class="mb-1"><strong>${result.affected_orders}</strong> affected orders</p>
+        </div>
+      `;
+    }
+
+    if (result.cost_impact !== undefined) {
+      html += `
+        <div class="col-md-3">
+          <p class="mb-1"><strong>$${result.cost_impact}</strong> cost impact</p>
+        </div>
+      `;
+    }
+
+    if (result.estimated_total_delay_hours !== undefined) {
+      html += `
+        <div class="col-md-3">
+          <p class="mb-1"><strong>${result.estimated_total_delay_hours}</strong> delay hours</p>
+        </div>
+      `;
+    }
+
+    if (result.additional_orders !== undefined) {
+      html += `
+        <div class="col-md-3">
+          <p class="mb-1"><strong>${result.additional_orders}</strong> additional orders</p>
+        </div>
+      `;
+    }
+
+    html += `</div></div>`;
+
+    // Display detailed results
+    html += `
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Detailed Impact Analysis</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-sm">
+              <tbody>
+    `;
+
+    // Display all result properties
+    for (const [key, value] of Object.entries(result)) {
+      if (key !== 'alternative_solutions' && key !== 'scenario') {
+        html += `
+          <tr>
+            <td><strong>${formatKey(key)}</strong></td>
+            <td>${formatValue(value)}</td>
+          </tr>
+        `;
+      }
+    }
+
+    html += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    resultsContainer.innerHTML = html;
+  }
+
+  function addToScenarioHistory(scenarioName, result) {
+    scenarioHistory.push({
+      name: scenarioName,
+      timestamp: new Date(),
+      result: result
+    });
+
+    updateScenarioHistory();
+  }
+
+  function updateScenarioHistory() {
+    const historyContainer = document.getElementById('scenarioHistory');
+
+    if (scenarioHistory.length === 0) {
+      historyContainer.innerHTML = `
+        <div class="text-center py-3 text-muted">
+          <i class="fas fa-history fa-2x mb-2"></i>
+          <p class="mb-0">No scenarios run yet</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '<div class="list-group">';
+    scenarioHistory.slice(-5).reverse().forEach((scenario, index) => {
+      html += `
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-1">${scenario.name}</h6>
+              <p class="mb-1 text-muted"><small>${scenario.timestamp.toLocaleString()}</small></p>
+            </div>
+            <div class="text-end">
+      `;
+
+      if (scenario.result.cost_impact !== undefined) {
+        html += `<span class="badge bg-warning me-2">$${scenario.result.cost_impact}</span>`;
+      }
+
+      if (scenario.result.affected_orders !== undefined) {
+        html += `<span class="badge bg-info">${scenario.result.affected_orders} orders</span>`;
+      }
+
+      html += `
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+
+    historyContainer.innerHTML = html;
+  }
+
+  function getRecommendations(result) {
+    fetch('/api/scenario/recommendations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({ results: result })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        displayRecommendations(data.recommendations);
+      })
+      .catch(error => {
+        console.error('Failed to get recommendations:', error);
+      });
+  }
+
+  function displayRecommendations(recommendations) {
+    const riskContainer = document.getElementById('riskAssessment');
+
+    let html = `
+      <div class="card">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0"><i class="fas fa-star me-2"></i>Action Recommendations</h6>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+    `;
+
+    recommendations.forEach(rec => {
+      html += `<li class="list-group-item">${rec}</li>`;
+    });
+
+    html += `
+          </ul>
+        </div>
+      </div>
+    `;
+
+    riskContainer.innerHTML = html;
+  }
+
+  function compareScenarios() {
+    if (scenarioHistory.length === 0) {
+      alert('No scenarios to compare. Run at least one scenario first.');
+      return;
+    }
+
+    // Prepare scenarios for comparison
+    const scenarios = scenarioHistory.map(history => ({
+      type: history.name.toLowerCase().replace(/\s+/g, '_'),
+      parameters: {} // In a real implementation, we'd store the actual parameters
+    }));
+
+    // Show loading state
+    document.getElementById('compareScenariosBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Comparing...';
+    document.getElementById('compareScenariosBtn').disabled = true;
+
+    const requestData = {
+      scenarios: scenarios,
+      baseline_data: baselineData
+    };
+
+    fetch('/api/scenario/compare', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify(requestData)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        displayComparisonResults(data.comparison);
+      })
+      .catch(error => {
+        document.getElementById('riskAssessment').innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>Scenario comparison failed: ${error.message}
+        </div>
+      `;
+      })
+      .finally(() => {
+        document.getElementById('compareScenariosBtn').innerHTML = '<i class="fas fa-balance-scale me-1"></i>Compare All';
+        document.getElementById('compareScenariosBtn').disabled = false;
+      });
+  }
+
+  function displayComparisonResults(comparison) {
+    const riskContainer = document.getElementById('riskAssessment');
+
+    let html = `
+      <div class="card">
+        <div class="card-header bg-dark text-white">
+          <h6 class="mb-0"><i class="fas fa-balance-scale me-2"></i>Scenario Comparison</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card bg-light">
+                <div class="card-body text-center">
+                  <h5 class="card-title">${comparison.total_simulations}</h5>
+                  <p class="card-text">Total Scenarios</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-warning">
+                <div class="card-body text-center">
+                  <h5 class="card-title">$${comparison.total_cost_impact.toLocaleString()}</h5>
+                  <p class="card-text">Total Cost Impact</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-info">
+                <div class="card-body text-center">
+                  <h5 class="card-title">${comparison.average_delay_hours.toFixed(1)} hrs</h5>
+                  <p class="card-text">Avg Delay</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-3">
+            <h6>Risk Distribution</h6>
+            <div class="progress">
+              <div class="progress-bar bg-danger" role="progressbar" 
+                   style="width: ${(comparison.risk_distribution.high_risk / comparison.total_simulations * 100)}%" 
+                   aria-valuenow="${comparison.risk_distribution.high_risk}" aria-valuemin="0" aria-valuemax="${comparison.total_simulations}">
+                High (${comparison.risk_distribution.high_risk})
+              </div>
+              <div class="progress-bar bg-warning" role="progressbar" 
+                   style="width: ${(comparison.risk_distribution.medium_risk / comparison.total_simulations * 100)}%" 
+                   aria-valuenow="${comparison.risk_distribution.medium_risk}" aria-valuemin="0" aria-valuemax="${comparison.total_simulations}">
+                Medium (${comparison.risk_distribution.medium_risk})
+              </div>
+              <div class="progress-bar bg-success" role="progressbar" 
+                   style="width: ${(comparison.risk_distribution.low_risk / comparison.total_simulations * 100)}%" 
+                   aria-valuenow="${comparison.risk_distribution.low_risk}" aria-valuemin="0" aria-valuemax="${comparison.total_simulations}">
+                Low (${comparison.risk_distribution.low_risk})
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-3">
+            <h6>Key Recommendations</h6>
+            <ul class="list-group list-group-flush">
+    `;
+
+    comparison.recommendations.forEach(rec => {
+      html += `<li class="list-group-item">${rec}</li>`;
+    });
+
+    html += `
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+
+    riskContainer.innerHTML = html;
+  }
+
+  function formatKey(key) {
+    // Convert snake_case to Title Case
+    return key.replace(/_/g, ' ')
+      .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  }
+
+  function formatValue(value) {
+    if (typeof value === 'number') {
+      if (value % 1 === 0) {
+        return value.toLocaleString();
+      } else {
+        return value.toFixed(2);
+      }
+    }
+    return value;
+  }
+</script>
+{% endblock %}

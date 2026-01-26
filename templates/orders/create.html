@@ -3,167 +3,200 @@
 {% block title %}Create Order - Logistics AI{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="section-header">
     <div>
-        <h2 class="fw-bold mb-1">Create New Order</h2>
-        <p class="text-muted mb-0">Add a new delivery order to the system</p>
+        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Logistics
+            Intake</div>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Initiate New Dispatch</h2>
+        <p class="text-body mb-0 small">Register a new geospatial mission node into the global routing network.</p>
     </div>
-    <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left me-2"></i>Back to Orders
-    </a>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('orders.list_orders') }}"
+            class="btn btn-secondary py-2 px-4 shadow-sm border-white border-opacity-10">
+            <i class="fas fa-arrow-left me-2"></i>Return to Index
+        </a>
+    </div>
 </div>
 
-<div class="row">
+<div class="row g-4">
     <div class="col-lg-8">
-        <div class="card">
-            <div class="card-body">
+        <div class="card p-0 overflow-hidden">
+            <div class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25">
+                <h6 class="fw-bold mb-0 text-heading small"><i
+                        class="fas fa-file-signature me-2 text-primary"></i>Mission Manifest</h6>
+            </div>
+            <div class="p-4">
                 <form method="POST" action="{{ url_for('orders.create_order') }}">
                     {{ form.hidden_tag() }}
-                    
-                    <h5 class="card-title mb-4">Order Information</h5>
-                    
-                    <div class="row g-3">
+
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <label class="form-label">{{ form.order_id.label }}</label>
-                            {{ form.order_id(class="form-control" + (" is-invalid" if form.order_id.errors else "")) }}
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">System
+                                Identifier</label>
+                            {{ form.order_id(class="form-control" + (" is-invalid" if form.order_id.errors else ""),
+                            placeholder="ORD-XXXXX") }}
                             {% if form.order_id.errors %}
-                                <div class="invalid-feedback">{{ form.order_id.errors[0] }}</div>
+                            <div class="invalid-feedback x-small">{{ form.order_id.errors[0] }}</div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6">
-                            <label class="form-label">{{ form.region.label }}</label>
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Geospatial
+                                Cluster</label>
                             {{ form.region(class="form-select" + (" is-invalid" if form.region.errors else "")) }}
                             {% if form.region.errors %}
-                                <div class="invalid-feedback">{{ form.region.errors[0] }}</div>
+                            <div class="invalid-feedback x-small">{{ form.region.errors[0] }}</div>
                             {% endif %}
                         </div>
-                    </div>
-                    
-                    <h5 class="card-title mb-3 mt-4">Customer Details</h5>
-                    
-                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <hr class="opacity-5 my-2">
+                        </div>
+
                         <div class="col-md-12">
-                            <label class="form-label">{{ form.customer_name.label }}</label>
-                            {{ form.customer_name(class="form-control" + (" is-invalid" if form.customer_name.errors else "")) }}
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Full
+                                Stakeholder Name</label>
+                            {{ form.customer_name(class="form-control" + (" is-invalid" if form.customer_name.errors
+                            else ""), placeholder="Legal or Corporate Name") }}
                             {% if form.customer_name.errors %}
-                                <div class="invalid-feedback">{{ form.customer_name.errors[0] }}</div>
+                            <div class="invalid-feedback x-small">{{ form.customer_name.errors[0] }}</div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6">
-                            <label class="form-label">{{ form.customer_phone.label }}</label>
-                            {{ form.customer_phone(class="form-control" + (" is-invalid" if form.customer_phone.errors else "")) }}
+                            <label
+                                class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Communication
+                                Node (Phone)</label>
+                            {{ form.customer_phone(class="form-control" + (" is-invalid" if form.customer_phone.errors
+                            else ""), placeholder="+1 (000) 000-0000") }}
                             {% if form.customer_phone.errors %}
-                                <div class="invalid-feedback">{{ form.customer_phone.errors[0] }}</div>
+                            <div class="invalid-feedback x-small">{{ form.customer_phone.errors[0] }}</div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-6">
-                            <label class="form-label">{{ form.customer_email.label }}</label>
-                            {{ form.customer_email(class="form-control" + (" is-invalid" if form.customer_email.errors else "")) }}
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Electronic
+                                Registry (Email)</label>
+                            {{ form.customer_email(class="form-control" + (" is-invalid" if form.customer_email.errors
+                            else ""), placeholder="registry@domain.com") }}
                             {% if form.customer_email.errors %}
-                                <div class="invalid-feedback">{{ form.customer_email.errors[0] }}</div>
+                            <div class="invalid-feedback x-small">{{ form.customer_email.errors[0] }}</div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="col-md-12">
-                            <label class="form-label">{{ form.delivery_address.label }}</label>
-                            {{ form.delivery_address(class="form-control" + (" is-invalid" if form.delivery_address.errors else ""), rows=3) }}
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Destination
+                                Geospatial Address</label>
+                            {{ form.delivery_address(class="form-control" + (" is-invalid" if
+                            form.delivery_address.errors else ""), rows=2, placeholder="Full physical delivery
+                            coordinates...") }}
                             {% if form.delivery_address.errors %}
-                                <div class="invalid-feedback">{{ form.delivery_address.errors[0] }}</div>
+                            <div class="invalid-feedback x-small">{{ form.delivery_address.errors[0] }}</div>
                             {% endif %}
                         </div>
-                    </div>
-                    
-                    <h5 class="card-title mb-3 mt-4">Package Details</h5>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">{{ form.weight_kg.label }}</label>
-                            {{ form.weight_kg(class="form-control" + (" is-invalid" if form.weight_kg.errors else "")) }}
-                            {% if form.weight_kg.errors %}
-                                <div class="invalid-feedback">{{ form.weight_kg.errors[0] }}</div>
-                            {% endif %}
+
+                        <div class="col-12">
+                            <hr class="opacity-5 my-2">
                         </div>
-                        
+
                         <div class="col-md-4">
-                            <label class="form-label">{{ form.volume_m3.label }}</label>
-                            {{ form.volume_m3(class="form-control" + (" is-invalid" if form.volume_m3.errors else "")) }}
-                            {% if form.volume_m3.errors %}
-                                <div class="invalid-feedback">{{ form.volume_m3.errors[0] }}</div>
-                            {% endif %}
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Mass
+                                (kg)</label>
+                            {{ form.weight_kg(class="form-control" + (" is-invalid" if form.weight_kg.errors else ""),
+                            placeholder="0.0") }}
                         </div>
-                        
+
                         <div class="col-md-4">
-                            <label class="form-label">{{ form.priority.label }}</label>
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Vol.
+                                Displacement (m³)</label>
+                            {{ form.volume_m3(class="form-control" + (" is-invalid" if form.volume_m3.errors else ""),
+                            placeholder="0.0") }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Mission
+                                Priority</label>
                             {{ form.priority(class="form-control" + (" is-invalid" if form.priority.errors else "")) }}
-                            <small class="text-muted">1=Low, 2=Medium, 3=High, 4=Urgent</small>
-                            {% if form.priority.errors %}
-                                <div class="invalid-feedback">{{ form.priority.errors[0] }}</div>
-                            {% endif %}
                         </div>
-                    </div>
-                    
-                    <h5 class="card-title mb-3 mt-4">Location (Optional)</h5>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.latitude.label }}</label>
-                            {{ form.latitude(class="form-control" + (" is-invalid" if form.latitude.errors else "")) }}
-                            {% if form.latitude.errors %}
-                                <div class="invalid-feedback">{{ form.latitude.errors[0] }}</div>
-                            {% endif %}
+
+                        <div class="col-md-4">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Latitude
+                                Override</label>
+                            {{ form.latitude(class="form-control", placeholder="0.0000") }}
                         </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.longitude.label }}</label>
-                            {{ form.longitude(class="form-control" + (" is-invalid" if form.longitude.errors else "")) }}
-                            {% if form.longitude.errors %}
-                                <div class="invalid-feedback">{{ form.longitude.errors[0] }}</div>
-                            {% endif %}
+
+                        <div class="col-md-4">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Longitude
+                                Override</label>
+                            {{ form.longitude(class="form-control", placeholder="0.0000") }}
                         </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">{{ form.deadline_hour.label }}</label>
-                            {{ form.deadline_hour(class="form-control" + (" is-invalid" if form.deadline_hour.errors else "")) }}
-                            {% if form.deadline_hour.errors %}
-                                <div class="invalid-feedback">{{ form.deadline_hour.errors[0] }}</div>
-                            {% endif %}
+
+                        <div class="col-md-4">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Service
+                                Deadline (HRS)</label>
+                            {{ form.deadline_hour(class="form-control", placeholder="24") }}
                         </div>
-                        
+
                         <div class="col-md-12">
-                            <label class="form-label">{{ form.delivery_notes.label }}</label>
-                            {{ form.delivery_notes(class="form-control" + (" is-invalid" if form.delivery_notes.errors else ""), rows=3) }}
-                            {% if form.delivery_notes.errors %}
-                                <div class="invalid-feedback">{{ form.delivery_notes.errors[0] }}</div>
-                            {% endif %}
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Operational
+                                Directives (Notes)</label>
+                            {{ form.delivery_notes(class="form-control", rows=2, placeholder="Special terminal
+                            instructions...") }}
                         </div>
                     </div>
-                    
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="fas fa-save me-2"></i>Create Order
+
+                    <div class="mt-5 pt-4 border-top border-white border-opacity-5 d-flex gap-3">
+                        <button type="submit" class="btn btn-primary px-5 py-3 shadow-lg">
+                            <i class="fas fa-paper-plane me-2"></i>Authorize Dispatch
                         </button>
-                        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary px-4">Cancel</a>
+                        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary px-4 py-3">Abort
+                            Entry</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    
+
     <div class="col-lg-4">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title mb-3"><i class="fas fa-info-circle me-2"></i>Quick Tips</h6>
-                <ul class="small text-muted">
-                    <li class="mb-2">Order ID should be unique</li>
-                    <li class="mb-2">Weight is required for route planning</li>
-                    <li class="mb-2">Higher priority orders are scheduled first</li>
-                    <li class="mb-2">Coordinates help optimize delivery routes</li>
-                    <li class="mb-2">Deadline hour is in 24-hour format (0-23)</li>
-                </ul>
+        <div class="card mb-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3">
+                    <i class="fas fa-lightbulb text-info"></i>
+                </div>
+                <h6 class="fw-bold text-heading mb-0 small">Dispatch Advisory</h6>
             </div>
+            <ul class="list-unstyled mb-0">
+                <li class="d-flex mb-3">
+                    <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
+                    <div class="x-small text-body opacity-75"><strong>Collision Check:</strong> System ID must be unique
+                        to prevent manifest overlap.</div>
+                </li>
+                <li class="d-flex mb-3">
+                    <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
+                    <div class="x-small text-body opacity-75"><strong>Routing Cost:</strong> Mass and Volume are
+                        critical for AI payload calculation.</div>
+                </li>
+                <li class="d-flex mb-3">
+                    <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
+                    <div class="x-small text-body opacity-75"><strong>SLA Adherence:</strong> Higher priority missions
+                        are prioritized in the solver.</div>
+                </li>
+                <li class="d-flex">
+                    <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
+                    <div class="x-small text-body opacity-75"><strong>GPS Accuracy:</strong> Manual coordinates will
+                        bypass auto-geocoding.</div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card text-center py-5">
+            <div
+                class="bg-dark bg-opacity-25 rounded-circle d-inline-flex p-4 mb-4 border border-white border-opacity-5 mx-auto">
+                <i class="fas fa-shield-halved fa-3x text-body opacity-25"></i>
+            </div>
+            <h6 class="text-heading fw-bold small">Enterprise Security</h6>
+            <p class="text-body x-small mx-auto opacity-50 px-4">All dispatch entries are cryptographically logged and
+                tracked for hardware audit trails.</p>
         </div>
     </div>
 </div>

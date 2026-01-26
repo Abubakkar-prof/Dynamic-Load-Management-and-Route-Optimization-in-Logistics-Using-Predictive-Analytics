@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block title %}Real-Time Tracking{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <div>
+    <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Live Telemetry
+    </div>
+    <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Geospatial Stream</h2>
+    <p class="text-body mb-0 small">Real-time hardware synchronization and operator performance tracking.</p>
+  </div>
+  <div class="d-flex gap-3">
+    <button id="refreshBtn" class="btn btn-secondary py-2 px-4 shadow-sm border-white border-opacity-10">
+      <i class="fas fa-satellite-dish me-2 text-primary"></i>Sync Terminal
+    </button>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card p-0 overflow-hidden border-primary border-opacity-10">
+      <div
+        class="px-4 py-3 border-bottom border-white border-opacity-5 d-flex justify-content-between align-items-center bg-dark bg-opacity-25">
+        <h6 class="fw-bold mb-0 text-heading small"><i class="fas fa-map-location-dot me-2 text-primary"></i>Live
+          Logistics Network</h6>
+        <div class="badge bg-success bg-opacity-10 text-success border-0 rounded-pill x-small px-3">
+          <i class="fas fa-circle me-1 animate-pulse" style="font-size: 5px;"></i>SYNCHRONIZED
+        </div>
+      </div>
+      <div id="map" style="height: 500px; filter: grayscale(1) invert(0.9) contrast(1.2);"></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card h-100 p-0 overflow-hidden border-info border-opacity-10">
+      <div
+        class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-heading small"><i class="fas fa-truck-container me-2 text-info"></i>Hardware
+          Registry</h6>
+        <span class="x-small text-body opacity-50 fw-bold">ACTIVE ASSETS</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="vehiclesTable">
+          <thead class="bg-dark bg-opacity-25">
+            <tr class="x-small text-uppercase fw-bold text-body opacity-50" style="letter-spacing: 1px;">
+              <th class="ps-4">Asset ID</th>
+              <th>Operator</th>
+              <th class="text-center">Status</th>
+              <th class="pe-4 text-end">Sync</th>
+            </tr>
+          </thead>
+          <tbody><!-- JS Populated --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100 p-0 overflow-hidden border-success border-opacity-10">
+      <div
+        class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-heading small"><i class="fas fa-box-open me-2 text-success"></i>Mission Registry
+        </h6>
+        <span class="x-small text-body opacity-50 fw-bold">IN-TRANSIT</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="ordersTable">
+          <thead class="bg-dark bg-opacity-25">
+            <tr class="x-small text-uppercase fw-bold text-body opacity-50" style="letter-spacing: 1px;">
+              <th class="ps-4">Order ID</th>
+              <th>Target Node</th>
+              <th class="text-center">Protocol</th>
+              <th class="pe-4 text-end">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody><!-- JS Populated --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card p-0 overflow-hidden border-warning border-opacity-10">
+  <div
+    class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25 d-flex justify-content-between align-items-center">
+    <h6 class="fw-bold mb-0 text-heading small"><i class="fas fa-user-shield me-2 text-warning"></i>Operational Human
+      Resources</h6>
+    <span class="x-small text-body opacity-50 fw-bold">PERFORMANCE MATRIX</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" id="performanceTable">
+      <thead class="bg-dark bg-opacity-25">
+        <tr class="x-small text-uppercase fw-bold text-body opacity-50" style="letter-spacing: 1px;">
+          <th class="ps-4">Personnel</th>
+          <th>License</th>
+          <th style="width: 200px;">Efficiency Index</th>
+          <th class="text-center">Successes</th>
+          <th class="text-center">On-Time</th>
+          <th class="pe-4 text-end">Status</th>
+        </tr>
+      </thead>
+      <tbody><!-- JS Populated --></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet CSS and JS integrated in base.html mostly, but ensuring custom tracking logic -->
+<style>
+  .marker-driver {
+    background-color: var(--brand-primary);
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    box-shadow: 0 0 10px var(--brand-primary);
+  }
+
+  .legend {
+    background: var(--bg-surface);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-default);
+    color: var(--text-body);
+    font-size: 0.8rem;
+  }
+
+  .legend h6 {
+    color: var(--text-heading);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.75rem;
+  }
+</style>
+
+<script>
+  // Initialize the map
+  var map = L.map('map').setView([24.8607, 67.0011], 12); // Default to Karachi coordinates
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Add legend
+  var legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'legend');
+    div.innerHTML = `
+      <h6><i class="fas fa-map-marker-alt"></i> Legend</h6>
+      <div><i class="fas fa-truck" style="color: #007bff;"></i> Vehicles</div>
+      <div><i class="fas fa-box" style="color: #28a745;"></i> Orders</div>
+    `;
+    return div;
+  };
+  legend.addTo(map);
+
+  // Store markers
+  var vehicleMarkers = {};
+  var orderMarkers = {};
+
+  // Connect to SocketIO
+  var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+  socket.on('connect', function () {
+    console.log('Connected to SocketIO server');
+  });
+
+  socket.on('location_update', function (data) {
+    console.log('Location update received:', data);
+    updateVehicleMarker(data);
+  });
+
+  // Fetch initial data
+  fetchData();
+
+  // Set up periodic refresh
+  setInterval(fetchData, 30000); // Refresh every 30 seconds
+
+  // Manual refresh button
+  document.getElementById('refreshBtn').addEventListener('click', fetchData);
+
+  function fetchData() {
+    fetchVehicles();
+    fetchOrders();
+    fetchDriverPerformance();
+  }
+
+  function fetchVehicles() {
+    fetch('/tracking/vehicles')
+      .then(response => response.json())
+      .then(data => {
+        updateVehiclesTable(data.vehicles);
+        updateVehicleMarkers(data.vehicles);
+      })
+      .catch(error => console.error('Error fetching vehicles:', error));
+  }
+
+  function fetchOrders() {
+    fetch('/tracking/orders')
+      .then(response => response.json())
+      .then(data => {
+        updateOrdersTable(data.orders);
+        updateOrderMarkers(data.orders);
+      })
+      .catch(error => console.error('Error fetching orders:', error));
+  }
+
+  function fetchDriverPerformance() {
+    fetch('/tracking/driver_performance')
+      .then(response => response.json())
+      .then(data => {
+        updatePerformanceTable(data.drivers);
+      })
+      .catch(error => console.error('Error fetching driver performance:', error));
+  }
+
+  function updateVehiclesTable(vehicles) {
+    const tbody = document.querySelector('#vehiclesTable tbody');
+    tbody.innerHTML = '';
+
+    vehicles.forEach(vehicle => {
+      const row = document.createElement('tr');
+      row.className = 'border-white border-opacity-5';
+      row.innerHTML = `
+        <td class="ps-4 fw-bold text-heading small">${vehicle.vehicle_id}</td>
+        <td class="text-body small">${vehicle.driver || '<span class="opacity-25 x-small fw-bold">AUTO-PILOT</span>'}</td>
+        <td class="text-center">
+          <span class="badge bg-${getStatusColor(vehicle.status)} bg-opacity-10 text-${getStatusColor(vehicle.status)} border-0 px-2 py-1 x-small fw-bold">
+            ${vehicle.status.toUpperCase()}
+          </span>
+        </td>
+        <td class="pe-4 text-end text-body x-small opacity-50 fw-bold">${new Date().toLocaleTimeString()}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function updateOrdersTable(orders) {
+    const tbody = document.querySelector('#ordersTable tbody');
+    tbody.innerHTML = '';
+
+    orders.forEach(order => {
+      const row = document.createElement('tr');
+      row.className = 'border-white border-opacity-5';
+      row.innerHTML = `
+        <td class="ps-4 fw-bold text-heading small">${order.order_id}</td>
+        <td class="text-body small">${order.customer}</td>
+        <td class="text-center">
+          <span class="badge bg-${getStatusColor(order.status)} bg-opacity-10 text-${getStatusColor(order.status)} border-0 px-2 py-1 x-small fw-bold">
+            ${order.status.toUpperCase()}
+          </span>
+        </td>
+        <td class="pe-4 text-end text-body x-small opacity-50 fw-bold">
+          ${order.last_update ? new Date(order.last_update).toLocaleTimeString() : 'SIGNAL_LOSS'}
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function updatePerformanceTable(drivers) {
+    const tbody = document.querySelector('#performanceTable tbody');
+    tbody.innerHTML = '';
+
+    drivers.forEach(driver => {
+      const row = document.createElement('tr');
+      row.className = 'border-white border-opacity-5';
+      row.innerHTML = `
+        <td class="ps-4">
+          <div class="text-heading small fw-bold">${driver.name}</div>
+        </td>
+        <td class="text-body x-small opacity-50 fw-bold">${driver.license}</td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height: 4px; background: rgba(255,255,255,0.05);">
+              <div class="progress-bar bg-${getRatingColor(driver.rating)}" 
+                   role="progressbar" style="width: ${driver.rating * 20}%;"></div>
+            </div>
+            <span class="x-small fw-bold text-heading">${driver.rating.toFixed(1)}</span>
+          </div>
+        </td>
+        <td class="text-center text-body small fw-bold">${driver.total_deliveries}</td>
+        <td class="text-center">
+          <div class="x-small fw-bold ${driver.on_time_rate > 90 ? 'text-success' : 'text-warning'}">
+            ${driver.on_time_rate.toFixed(1)}%
+          </div>
+        </td>
+        <td class="pe-4 text-end">
+          <span class="badge bg-${getStatusColor(driver.status)} bg-opacity-10 text-${getStatusColor(driver.status)} border-0 px-2 py-1 x-small fw-bold">
+            ${driver.status.toUpperCase()}
+          </span>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function updateVehicleMarkers(vehicles) {
+    // Clear existing markers
+    Object.values(vehicleMarkers).forEach(marker => map.removeLayer(marker));
+    vehicleMarkers = {};
+
+    // Add new markers
+    vehicles.forEach(vehicle => {
+      if (vehicle.lat && vehicle.lon) {
+        var marker = L.circleMarker([vehicle.lat, vehicle.lon], {
+          radius: 8,
+          fillColor: getStatusHex(vehicle.status),
+          color: "#fff",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8
+        }).addTo(map);
+
+        marker.bindPopup(`
+          <div class="p-2">
+            <div class="x-small text-muted text-uppercase fw-bold mb-1">Asset ${vehicle.vehicle_id}</div>
+            <div class="fw-bold mb-2">${vehicle.driver || 'Autonomous Node'}</div>
+            <div class="badge bg-${getStatusColor(vehicle.status)} bg-opacity-10 text-${getStatusColor(vehicle.status)} border-0 px-2 py-1 x-small fw-bold">
+              ${vehicle.status.toUpperCase()}
+            </div>
+          </div>
+        `, { className: 'custom-popup' });
+
+        vehicleMarkers[vehicle.id] = marker;
+      }
+    });
+  }
+
+  function updateOrderMarkers(orders) {
+    // Clear existing markers
+    Object.values(orderMarkers).forEach(marker => map.removeLayer(marker));
+    orderMarkers = {};
+
+    // Add new markers
+    orders.forEach(order => {
+      if (order.lat && order.lon) {
+        var marker = L.circleMarker([order.lat, order.lon], {
+          radius: 6,
+          fillColor: "#10b981",
+          color: "#fff",
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.6
+        }).addTo(map);
+
+        marker.bindPopup(`
+          <div class="p-2">
+            <div class="x-small text-muted text-uppercase fw-bold mb-1">Mission ${order.order_id}</div>
+            <div class="fw-bold mb-1">${order.customer}</div>
+            <div class="x-small text-body">${order.status}</div>
+          </div>
+        `);
+
+        orderMarkers[order.id] = marker;
+      }
+    });
+  }
+
+  function getStatusColor(status) {
+    const colors = {
+      'Available': 'success',
+      'On Route': 'primary',
+      'Maintenance': 'warning',
+      'In Transit': 'info',
+      'Delivered': 'success',
+      'Assigned': 'primary',
+      'Active': 'success'
+    };
+    return colors[status] || 'secondary';
+  }
+
+  function getStatusHex(status) {
+    const hex = {
+      'Available': '#10b981',
+      'On Route': '#4361ee',
+      'Maintenance': '#f59e0b',
+      'In Transit': '#0ea5e9'
+    };
+    return hex[status] || '#64748b';
+  }
+
+  function getRatingColor(rating) {
+    if (rating >= 4.5) return 'success';
+    if (rating >= 3.5) return 'warning';
+    return 'danger';
+  }
+</script>
+{% endblock %}

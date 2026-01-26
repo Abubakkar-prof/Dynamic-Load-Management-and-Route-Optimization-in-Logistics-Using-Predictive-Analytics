@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Logistics AI - Enterprise Logic{% endblock %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="text-center">
+        <h1 class="display-4 fw-bold text-heading mb-4">Logistics<span class="text-primary">OS</span></h1>
+        <p class="lead text-body mb-5">Next-Generation Fleet Management & AI Optimization Engine</p>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-rocket me-2"></i>Enter Dashboard
+            </a>
+            <!-- <a href="#" class="btn btn-secondary btn-lg px-5">
+                <i class="fas fa-shield-alt me-2"></i>Admin Console
+            </a> -->
+        </div>
+
+        <div class="mt-5 text-body opacity-50 small">
+            System Operational • v2.0.0 (Django Migration)
+        </div>
+    </div>
+</div>
+{% endblock %}

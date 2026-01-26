@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block title %}Fleet Management - Logistics AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-filter-bar {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .search-input {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        color: var(--text-heading);
+        width: 100%;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-body);
+    }
+
+    .filter-select {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: var(--text-heading);
+    }
+
+    .table-modern {
+        background: var(--bg-surface);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .table-modern thead th {
+        background: rgba(59, 130, 246, 0.05);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+        padding: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .table-modern thead th:hover {
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .table-modern tbody tr {
+        border-bottom: 1px solid var(--border-default);
+        transition: all 0.2s;
+    }
+
+    .table-modern tbody tr:hover {
+        background: rgba(59, 130, 246, 0.03);
+        transform: scale(1.01);
+    }
+
+    .table-modern tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+    }
+
+    .pagination-modern {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .page-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-default);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        color: var(--text-body);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover {
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+    }
+
+    .page-btn.active {
+        background: var(--brand-primary);
+        border-color: var(--brand-primary);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Fleet Operations</h2>
+        <p class="text-body mb-0 small">Monitor and manage vehicle assets and driver assignments.</p>
+    </div>
+    <div class="d-flex gap-3">
+        <button class="btn btn-secondary py-2 px-4 shadow-sm" onclick="exportFleet()">
+            <i class="fas fa-download me-2"></i>Export CSV
+        </button>
+        <a href="{% url 'vehicle-create' %}" class="btn btn-primary py-2 px-4 shadow-sm">
+            <i class="fas fa-plus me-2"></i>Add Vehicle
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="search-filter-bar">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="position-relative">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search vehicles by ID or type...">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <select id="statusFilter" class="filter-select form-select">
+                <option value="">All Statuses</option>
+                <option value="Available">Available</option>
+                <option value="On Route">On Route</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Inactive">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="typeFilter" class="filter-select form-select">
+                <option value="">All Types</option>
+                <option value="Van">Van</option>
+                <option value="Truck">Truck</option>
+                <option value="Pickup">Pickup</option>
+                <option value="Semi-Trailer">Semi-Trailer</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select id="perPage" class="filter-select form-select">
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+                <option value="50">50 per page</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div class="text-body x-small text-uppercase fw-bold mb-1">Total Fleet</div>
+            <h3 class="text-heading fw-bold mb-0" id="totalVehicles">-</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div class="text-body x-small text-uppercase fw-bold mb-1">Available</div>
+            <h3 class="text-success fw-bold mb-0" id="availableVehicles">-</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div class="text-body x-small text-uppercase fw-bold mb-1">On Route</div>
+            <h3 class="text-primary fw-bold mb-0" id="onRouteVehicles">-</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <div class="text-body x-small text-uppercase fw-bold mb-1">Maintenance</div>
+            <h3 class="text-warning fw-bold mb-0" id="maintenanceVehicles">-</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicles Table -->
+<div class="table-modern">
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th onclick="sortTable('vehicle_id')">Vehicle ID <i class="fas fa-sort sort-icon"></i></th>
+                    <th onclick="sortTable('type')">Type <i class="fas fa-sort sort-icon"></i></th>
+                    <th onclick="sortTable('capacity_kg')">Capacity <i class="fas fa-sort sort-icon"></i></th>
+                    <th onclick="sortTable('status')">Status <i class="fas fa-sort sort-icon"></i></th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="vehicles-table-body">
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-body opacity-50">
+                        <i class="fas fa-circle-notch fa-spin me-2"></i>Loading Fleet Data...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-modern" id="pagination"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let allVehicles = [];
+    let filteredVehicles = [];
+    let currentPage = 1;
+    let perPage = 10;
+    let sortColumn = 'vehicle_id';
+    let sortDirection = 'asc';
+
+    // Fetch vehicles
+    fetch('/api/vehicles/')
+        .then(res => res.json())
+        .then(data => {
+            allVehicles = data;
+            filteredVehicles = data;
+            updateStats();
+            renderTable();
+            showToast('Fleet data loaded successfully!', 'success');
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Failed to load fleet data', 'error');
+        });
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        applyFilters();
+    });
+
+    // Status filter
+    document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+    // Type filter
+    document.getElementById('typeFilter').addEventListener('change', applyFilters);
+
+    // Per page selector
+    document.getElementById('perPage').addEventListener('change', (e) => {
+        perPage = parseInt(e.target.value);
+        currentPage = 1;
+        renderTable();
+    });
+
+    function applyFilters() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const type = document.getElementById('typeFilter').value;
+
+        filteredVehicles = allVehicles.filter(vehicle => {
+            const matchesSearch = vehicle.vehicle_id.toLowerCase().includes(query) ||
+                vehicle.type.toLowerCase().includes(query);
+            const matchesStatus = !status || vehicle.status === status;
+            const matchesType = !type || vehicle.type === type;
+            return matchesSearch && matchesStatus && matchesType;
+        });
+
+        currentPage = 1;
+        renderTable();
+    }
+
+    // Sort table
+    function sortTable(column) {
+        if (sortColumn === column) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = column;
+            sortDirection = 'asc';
+        }
+
+        filteredVehicles.sort((a, b) => {
+            let aVal = a[column];
+            let bVal = b[column];
+
+            if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
+            }
+
+            if (sortDirection === 'asc') {
+                return aVal > bVal ? 1 : -1;
+            } else {
+                return aVal < bVal ? 1 : -1;
+            }
+        });
+
+        renderTable();
+    }
+
+    // Update stats
+    function updateStats() {
+        document.getElementById('totalVehicles').textContent = allVehicles.length;
+        document.getElementById('availableVehicles').textContent = allVehicles.filter(v => v.status === 'Available').length;
+        document.getElementById('onRouteVehicles').textContent = allVehicles.filter(v => v.status === 'On Route').length;
+        document.getElementById('maintenanceVehicles').textContent = allVehicles.filter(v => v.status === 'Maintenance').length;
+    }
+
+    // Render table
+    function renderTable() {
+        const tbody = document.getElementById('vehicles-table-body');
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        const pageVehicles = filteredVehicles.slice(start, end);
+
+        if (pageVehicles.length === 0) {
+            tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-5">
+                    <i class="fas fa-truck mb-3 d-block" style="font-size: 2rem; opacity: 0.3;"></i>
+                    <p class="text-body">No vehicles found</p>
+                </td>
+            </tr>
+        `;
+            return;
+        }
+
+        tbody.innerHTML = pageVehicles.map(vehicle => {
+            const statusColors = {
+                'Available': 'success',
+                'On Route': 'primary',
+                'Maintenance': 'warning',
+                'Inactive': 'danger'
+            };
+            const badgeColor = statusColors[vehicle.status] || 'secondary';
+
+            return `
+            <tr>
+                <td>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded px-2 py-1 x-small fw-bold d-inline-block">
+                        ${vehicle.vehicle_id}
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-semibold text-heading">${vehicle.type}</div>
+                </td>
+                <td>
+                    <div class="x-small">
+                        <span class="text-heading fw-bold">${vehicle.capacity_kg}kg</span>
+                        <span class="mx-1 text-body opacity-25">|</span>
+                        <span class="text-heading fw-bold">${vehicle.capacity_vol}m³</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-${badgeColor} bg-opacity-10 text-${badgeColor} border border-${badgeColor} border-opacity-25">
+                        ${vehicle.status}
+                    </span>
+                </td>
+                <td class="text-body small">
+                    ${vehicle.current_location_lat ? vehicle.current_location_lat.toFixed(4) + ', ' + vehicle.current_location_lon.toFixed(4) : 'N/A'}
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-icon btn-secondary" title="View Details">
+                            <i class="fas fa-eye x-small"></i>
+                        </button>
+                        <button class="btn btn-sm btn-icon btn-secondary" title="Edit">
+                            <i class="fas fa-pen x-small"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        }).join('');
+
+        renderPagination();
+    }
+
+    // Render pagination
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredVehicles.length / perPage);
+        const pagination = document.getElementById('pagination');
+
+        let html = `
+        <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    `;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            } else if (i === currentPage - 3 || i === currentPage + 3) {
+                html += `<span class="text-body">...</span>`;
+            }
+        }
+
+        html += `
+        <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    `;
+
+        pagination.innerHTML = html;
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(filteredVehicles.length / perPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderTable();
+    }
+
+    function exportFleet() {
+        const csv = [
+            ['Vehicle ID', 'Type', 'Capacity (kg)', 'Volume (m³)', 'Status', 'Location'],
+            ...filteredVehicles.map(v => [
+                v.vehicle_id,
+                v.type,
+                v.capacity_kg,
+                v.capacity_vol,
+                v.status,
+                v.current_location_lat ? `${v.current_location_lat}, ${v.current_location_lon}` : 'N/A'
+            ])
+        ].map(row => row.join(',')).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'fleet.csv';
+        a.click();
+
+        showToast('Fleet data exported successfully!', 'success');
+    }
+</script>
+{% endblock %}

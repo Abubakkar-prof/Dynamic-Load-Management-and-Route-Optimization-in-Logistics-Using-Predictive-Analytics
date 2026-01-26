@@ -3,138 +3,196 @@
 {% block title %}Orders - Logistics AI{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="section-header">
     <div>
-        <h2 class="fw-bold mb-1">Orders Management</h2>
-        <p class="text-muted mb-0">Manage and track all customer orders</p>
+        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Logistics
+            Network</div>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Dispatch Index</h2>
+        <p class="text-body mb-0 small">Comprehensive database of active and historical geospatial mission nodes.</p>
     </div>
-    <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary px-4">
-        <i class="fas fa-plus me-2"></i>New Order
-    </a>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary py-2 px-4 shadow-sm">
+            <i class="fas fa-plus me-2"></i>New Dispatch
+        </a>
+    </div>
 </div>
 
-<!-- Filters -->
-<div class="card mb-4 p-3">
-    <form method="GET" action="{{ url_for('orders.list_orders') }}" class="row g-3">
-        <div class="col-md-3">
-            <input type="text" class="form-control" name="search" placeholder="Search orders..." value="{{ search }}">
-        </div>
-        <div class="col-md-2">
-            <select class="form-select" name="status">
-                <option value="all" {% if status_filter == 'all' or not status_filter %}selected{% endif %}>All Status</option>
-                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>Assigned</option>
-                <option value="in_transit" {% if status_filter == 'in_transit' %}selected{% endif %}>In Transit</option>
-                <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select class="form-select" name="region">
-                <option value="all" {% if region_filter == 'all' or not region_filter %}selected{% endif %}>All Regions</option>
-                <option value="North" {% if region_filter == 'North' %}selected{% endif %}>North</option>
-                <option value="South" {% if region_filter == 'South' %}selected{% endif %}>South</option>
-                <option value="East" {% if region_filter == 'East' %}selected{% endif %}>East</option>
-                <option value="West" {% if region_filter == 'West' %}selected{% endif %}>West</option>
-                <option value="Central" {% if region_filter == 'Central' %}selected{% endif %}>Central</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-secondary w-100">
-                <i class="fas fa-filter me-2"></i>Filter
-            </button>
-        </div>
-    </form>
+<!-- Advanced Search Cluster -->
+<div class="card mb-4 overflow-hidden p-0 border-white border-opacity-5">
+    <div class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25">
+        <h6 class="fw-bold mb-0 text-heading small"><i class="fas fa-filter me-2 text-primary"></i>Query Parameters</h6>
+    </div>
+    <div class="p-4">
+        <form method="GET" action="{{ url_for('orders.list_orders') }}" class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 opacity-50"><i
+                            class="fas fa-search x-small"></i></span>
+                    <input type="text" class="form-control border-start-0" name="search"
+                        placeholder="Mission ID or Customer..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="all" {% if status_filter=='all' or not status_filter %}selected{% endif %}>Status:
+                        All States</option>
+                    <option value="pending" {% if status_filter=='pending' %}selected{% endif %}>State: Pending</option>
+                    <option value="assigned" {% if status_filter=='assigned' %}selected{% endif %}>State: Assigned
+                    </option>
+                    <option value="in_transit" {% if status_filter=='in_transit' %}selected{% endif %}>State: In Transit
+                    </option>
+                    <option value="delivered" {% if status_filter=='delivered' %}selected{% endif %}>State: Delivered
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="region">
+                    <option value="all" {% if region_filter=='all' or not region_filter %}selected{% endif %}>Region:
+                        Global</option>
+                    <option value="North" {% if region_filter=='North' %}selected{% endif %}>Sector: North</option>
+                    <option value="South" {% if region_filter=='South' %}selected{% endif %}>Sector: South</option>
+                    <option value="East" {% if region_filter=='East' %}selected{% endif %}>Sector: East</option>
+                    <option value="West" {% if region_filter=='West' %}selected{% endif %}>Sector: West</option>
+                    <option value="Central" {% if region_filter=='Central' %}selected{% endif %}>Sector: Central
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100 py-2 fw-bold small">
+                    <i class="fas fa-terminal me-2"></i>Execute Query
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
-<!-- Orders Table -->
-<div class="card">
+<!-- Mission Registry Table -->
+<div class="card p-0 overflow-hidden"
+    style="background: var(--bg-surface); backdrop-filter: var(--glass-blur); border: 1px solid var(--border-default);">
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Region</th>
-                    <th>Weight (kg)</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-dark bg-opacity-25">
+                <tr class="x-small text-uppercase fw-bold text-body opacity-50" style="letter-spacing: 1px;">
+                    <th class="ps-4 py-3">Mission ID</th>
+                    <th class="py-3">Stakeholder</th>
+                    <th class="py-3 text-center">Sector</th>
+                    <th class="py-3 text-center">Mass (kg)</th>
+                    <th class="py-3 text-center">Priority</th>
+                    <th class="py-3 text-center">Status</th>
+                    <th class="py-3">Timestamp</th>
+                    <th class="pe-4 py-3 text-end">Interface</th>
                 </tr>
             </thead>
             <tbody>
                 {% for order in orders %}
-                <tr>
-                    <td><strong>{{ order.order_id }}</strong></td>
-                    <td>{{ order.customer_name or 'N/A' }}</td>
-                    <td><span class="badge bg-info">{{ order.region }}</span></td>
-                    <td>{{ order.weight_kg }}</td>
-                    <td>
-                        {% if order.priority == 4 %}
-                            <span class="badge bg-danger">Urgent</span>
+                <tr class="border-white border-opacity-5">
+                    <td class="ps-4 py-3">
+                        <div class="fw-bold text-heading">{{ order.order_id }}</div>
+                    </td>
+                    <td class="py-3">
+                        <div class="text-heading small fw-bold mb-0">{{ order.customer_name or 'DE-IDENTIFIED' }}</div>
+                    </td>
+                    <td class="py-3 text-center">
+                        <span class="badge bg-info bg-opacity-10 text-info border-0 px-2 py-1 x-small fw-bold">{{
+                            order.region }}</span>
+                    </td>
+                    <td class="py-3 text-center">
+                        <div class="text-body small fw-bold">{{ order.weight_kg }}</div>
+                    </td>
+                    <td class="py-3 text-center">
+                        {% if order.priority >= 4 %}
+                        <span
+                            class="badge bg-danger bg-opacity-10 text-danger border-0 px-2 py-1 x-small fw-bold">URGENT</span>
                         {% elif order.priority == 3 %}
-                            <span class="badge bg-warning">High</span>
+                        <span
+                            class="badge bg-warning bg-opacity-10 text-warning border-0 px-2 py-1 x-small fw-bold">HIGH</span>
                         {% elif order.priority == 2 %}
-                            <span class="badge bg-primary">Medium</span>
+                        <span
+                            class="badge bg-primary bg-opacity-10 text-primary border-0 px-2 py-1 x-small fw-bold">MEDIUM</span>
                         {% else %}
-                            <span class="badge bg-secondary">Low</span>
+                        <span
+                            class="badge bg-secondary bg-opacity-5 text-body border-0 px-2 py-1 x-small fw-bold">LOW</span>
                         {% endif %}
                     </td>
-                    <td>
-                        {% set status_val = order.status.value if order.status.value is defined else str(order.status) %}
+                    <td class="py-3 text-center">
+                        {% set status_val = order.status.value if order.status.value is defined else order.status|string
+                        %}
                         {% if status_val == 'Pending' %}
-                            <span class="badge bg-warning">{{ status_val }}</span>
+                        <span
+                            class="badge bg-warning bg-opacity-10 text-warning border-0 px-2 py-1 x-small fw-bold">PENDING</span>
                         {% elif status_val == 'Delivered' %}
-                            <span class="badge bg-success">{{ status_val }}</span>
+                        <span
+                            class="badge bg-success bg-opacity-10 text-success border-0 px-2 py-1 x-small fw-bold">DELIVERED</span>
                         {% elif status_val == 'In Transit' %}
-                            <span class="badge bg-info">{{ status_val }}</span>
+                        <span
+                            class="badge bg-primary bg-opacity-10 text-primary border-0 px-2 py-1 x-small fw-bold">TRANSIT</span>
                         {% else %}
-                            <span class="badge bg-secondary">{{ status_val }}</span>
+                        <span
+                            class="badge bg-secondary bg-opacity-10 text-secondary border-0 px-2 py-1 x-small fw-bold">{{
+                            status_val|upper }}</span>
                         {% endif %}
                     </td>
-                    <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else 'N/A' }}</td>
-                    <td>
-                        <a href="{{ url_for('orders.view_order', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
+                    <td class="py-3">
+                        <div class="x-small text-body opacity-50 fw-bold">{{ order.created_at.strftime('%Y-%m-%d %H:%M')
+                            if order.created_at else 'TBD' }}</div>
+                    </td>
+                    <td class="pe-4 py-3 text-end">
+                        <a href="{{ url_for('orders.view_order', order_id=order.id) }}"
+                            class="btn btn-secondary btn-sm rounded-3 px-3 py-2 border-white border-opacity-10">
+                            <i class="fas fa-satellite-dish me-2 text-primary"></i>Inspect
                         </a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
-                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                        No orders found
+                    <td colspan="8" class="text-center py-5">
+                        <div class="opacity-25 mb-3">
+                            <i class="fas fa-inbox fa-3x"></i>
+                        </div>
+                        <h6 class="text-heading fw-bold">No active mission clusters found</h6>
+                        <p class="text-body x-small mb-0">Refine your query parameters or initiate a new dispatch.</p>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    
-    <!-- Pagination -->
+
+    <!-- Registry Pagination -->
     {% if pagination.pages > 1 %}
-    <div class="card-footer">
-        <nav>
-            <ul class="pagination justify-content-center mb-0">
+    <div class="px-4 py-3 border-top border-white border-opacity-5 bg-dark bg-opacity-10">
+        <nav class="d-flex justify-content-between align-items-center">
+            <div class="x-small text-body opacity-50 fw-bold">
+                Page {{ pagination.page }} of {{ pagination.pages }}
+            </div>
+            <ul class="pagination pagination-sm mb-0 gap-2">
                 {% if pagination.has_prev %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('orders.list_orders', page=pagination.prev_num, status=status_filter, region=region_filter, search=search) }}">Previous</a>
+                    <a class="page-link rounded-3 border-white border-opacity-10 bg-secondary px-3"
+                        href="{{ url_for('orders.list_orders', page=pagination.prev_num, status=status_filter, region=region_filter, search=search) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
                 </li>
                 {% endif %}
-                
+
                 {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                    {% if page_num %}
-                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('orders.list_orders', page=page_num, status=status_filter, region=region_filter, search=search) }}">{{ page_num }}</a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                    {% endif %}
+                {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link rounded-3 border-white border-opacity-10 bg-secondary px-3"
+                        href="{{ url_for('orders.list_orders', page=page_num, status=status_filter, region=region_filter, search=search) }}">{{
+                        page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link border-0">...</span></li>
+                {% endif %}
                 {% endfor %}
-                
+
                 {% if pagination.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ url_for('orders.list_orders', page=pagination.next_num, status=status_filter, region=region_filter, search=search) }}">Next</a>
+                    <a class="page-link rounded-3 border-white border-opacity-10 bg-secondary px-3"
+                        href="{{ url_for('orders.list_orders', page=pagination.next_num, status=status_filter, region=region_filter, search=search) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
                 </li>
                 {% endif %}
             </ul>

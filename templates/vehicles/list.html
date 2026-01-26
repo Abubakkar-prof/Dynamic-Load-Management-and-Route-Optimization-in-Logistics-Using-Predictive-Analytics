@@ -3,72 +3,119 @@
 {% block title %}Fleet - Logistics AI{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="section-header">
     <div>
-        <h2 class="fw-bold mb-1">Fleet Management</h2>
-        <p class="text-muted mb-0">Monitor and manage your vehicle fleet</p>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Fleet Assets</h2>
+        <p class="text-body mb-0 small">Operational status and technical capacity of the active logistics network.</p>
     </div>
-    <a href="{{ url_for('vehicles.create_vehicle') }}" class="btn btn-primary px-4">
-        <i class="fas fa-plus me-2"></i>Add Vehicle
-    </a>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('vehicles.create_vehicle') }}" class="btn btn-primary py-2 px-4 shadow-sm">
+            <i class="fas fa-plus me-2"></i>Provision Asset
+        </a>
+    </div>
 </div>
+
+<style>
+    .status-border-available {
+        border-top: 4px solid #10b981;
+    }
+
+    .status-border-on-route {
+        border-top: 4px solid #3b82f6;
+    }
+
+    .status-border-maintenance {
+        border-top: 4px solid #f59e0b;
+    }
+
+    .status-border-offline {
+        border-top: 4px solid #64748b;
+    }
+</style>
 
 <div class="row g-4">
     {% for vehicle in vehicles %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+    {% set status_val = vehicle.status.value if vehicle.status.value is defined else vehicle.status|string %}
+    {% set status_class = status_val|lower|replace(' ', '-') %}
+    <div class="col-xl-4 col-md-6">
+        <div class="card h-100 p-0 overflow-hidden status-border-{{ status_class }}"
+            style="background: var(--bg-surface); backdrop-filter: var(--glass-blur); border: 1px solid var(--border-default);">
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-start mb-4">
                     <div>
-                        <h5 class="card-title mb-1">{{ vehicle.vehicle_id }}</h5>
-                        <p class="text-muted small mb-0">{{ vehicle.make }} {{ vehicle.model }}</p>
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1"
+                            style="letter-spacing: 1px;">Asset Reference</div>
+                        <h4 class="text-heading fw-bold mb-0">{{ vehicle.vehicle_id }}</h4>
                     </div>
-                    {% set status_val = vehicle.status.value if vehicle.status.value is defined else str(vehicle.status) %}
                     {% if status_val == 'Available' %}
-                        <span class="badge bg-success">{{ status_val }}</span>
+                    <div
+                        class="badge bg-success bg-opacity-10 text-success border-0 px-3 py-2 rounded-pill x-small fw-bold">
+                        Ready</div>
                     {% elif status_val == 'On Route' %}
-                        <span class="badge bg-info">{{ status_val }}</span>
+                    <div
+                        class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2 rounded-pill x-small fw-bold">
+                        Active</div>
                     {% elif status_val == 'Maintenance' %}
-                        <span class="badge bg-warning">{{ status_val }}</span>
+                    <div
+                        class="badge bg-warning bg-opacity-10 text-warning border-0 px-3 py-2 rounded-pill x-small fw-bold">
+                        Service</div>
                     {% else %}
-                        <span class="badge bg-secondary">{{ status_val }}</span>
+                    <div
+                        class="badge bg-secondary bg-opacity-10 text-secondary border-0 px-3 py-2 rounded-pill x-small fw-bold">
+                        Offline</div>
                     {% endif %}
                 </div>
-                
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between text-muted small mb-1">
-                        <span><i class="fas fa-weight-hanging me-1"></i>Capacity:</span>
-                        <strong>{{ vehicle.capacity_kg }} kg</strong>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small mb-1">
-                        <span><i class="fas fa-cube me-1"></i>Volume:</span>
-                        <strong>{{ vehicle.capacity_vol }} m³</strong>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small mb-1">
-                        <span><i class="fas fa-car me-1"></i>Type:</span>
-                        <strong>{{ vehicle.type }}</strong>
-                    </div>
-                    {% if vehicle.license_plate %}
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span><i class="fas fa-id-card me-1"></i>Plate:</span>
-                        <strong>{{ vehicle.license_plate }}</strong>
-                    </div>
-                    {% endif %}
+
+                <div class="mb-4">
+                    <h6 class="text-heading fw-bold mb-1">{{ vehicle.make }}</h6>
+                    <p class="text-body small mb-0">{{ vehicle.model }} • {{ vehicle.type }}</p>
                 </div>
-                
-                <a href="{{ url_for('vehicles.view_vehicle', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-primary w-100">
-                    <i class="fas fa-eye me-1"></i>View Details
+
+                <div class="bg-dark bg-opacity-25 rounded-4 p-3 mb-4 border border-white border-opacity-5">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="x-small text-body opacity-50 mb-1">Max Payload</div>
+                            <div class="text-heading small fw-bold"><i
+                                    class="fas fa-weight-hanging me-2 text-primary"></i>{{ vehicle.capacity_kg }} kg
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="x-small text-body opacity-50 mb-1">Cubic Space</div>
+                            <div class="text-heading small fw-bold"><i class="fas fa-cube me-2 text-info"></i>{{
+                                vehicle.capacity_vol }} m³</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if vehicle.license_plate %}
+                <div
+                    class="d-flex align-items-center justify-content-between x-small py-2 border-top border-white border-opacity-5">
+                    <span class="text-body opacity-50">Registration Plate Code</span>
+                    <span class="text-heading fw-bold">{{ vehicle.license_plate }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="p-3 border-top border-white border-opacity-5 bg-dark bg-opacity-10">
+                <a href="{{ url_for('vehicles.view_vehicle', vehicle_id=vehicle.id) }}"
+                    class="btn btn-secondary w-100 py-2 small fw-bold">
+                    <i class="fas fa-layer-group me-2"></i>Full Telemetry Profile
                 </a>
             </div>
         </div>
     </div>
     {% else %}
     <div class="col-12">
-        <div class="card">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-truck fa-4x text-muted mb-3"></i>
-                <p class="text-muted">No vehicles found. Add your first vehicle to get started.</p>
+        <div class="card p-5 text-center">
+            <div class="bg-dark bg-opacity-25 rounded-circle d-inline-flex p-4 mb-4">
+                <i class="fas fa-truck-ramp-box fa-3x text-body opacity-25"></i>
             </div>
+            <h4 class="text-heading fw-bold">Connectivity Gap Detected</h4>
+            <p class="text-body small mb-4 mx-auto" style="max-width: 400px;">No vehicle assets currently registered in
+                the database. Provision a new asset to start fleet indexing.</p>
+            <a href="{{ url_for('vehicles.create_vehicle') }}" class="btn btn-primary px-5 py-3 rounded-pill shadow-lg">
+                <i class="fas fa-plus me-2"></i>Initialize First Asset
+            </a>
         </div>
     </div>
     {% endfor %}

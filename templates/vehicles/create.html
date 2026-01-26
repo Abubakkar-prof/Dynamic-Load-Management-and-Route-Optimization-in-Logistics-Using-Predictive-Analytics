@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Provision Asset - Logistics AI{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Fleet
+            Expansion</div>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Register New Asset</h2>
+        <p class="text-body mb-0 small">Initialize a new hardware node into the global logistics grid.</p>
+    </div>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('vehicles.list_vehicles') }}"
+            class="btn btn-secondary py-2 px-4 shadow-sm border-white border-opacity-10">
+            <i class="fas fa-arrow-left me-2"></i>Return to Index
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-0 overflow-hidden">
+            <div class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25">
+                <h6 class="fw-bold mb-0 text-heading small"><i class="fas fa-truck-ramp-box me-2 text-primary"></i>Asset
+                    Specification</h6>
+            </div>
+            <div class="p-4">
+                <form method="POST" action="{{ url_for('vehicles.create_vehicle') }}">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">System
+                                Identifier</label>
+                            {{ form.vehicle_id(class="form-control" + (" is-invalid" if form.vehicle_id.errors else ""),
+                            placeholder="TRK-XXXXX") }}
+                            {% if form.vehicle_id.errors %}
+                            <div class="invalid-feedback x-small">{{ form.vehicle_id.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Hardware
+                                Class</label>
+                            {{ form.type(class="form-control" + (" is-invalid" if form.type.errors else ""),
+                            placeholder="Truck, Van, etc.") }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label
+                                class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Manufacturer</label>
+                            {{ form.make(class="form-control", placeholder="Toyota, Isuzu...") }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Model
+                                Core</label>
+                            {{ form.model(class="form-control", placeholder="Series/V-Version") }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Manufacture
+                                Year</label>
+                            {{ form.year(class="form-control", placeholder="2024") }}
+                        </div>
+
+                        <div class="col-md-12">
+                            <hr class="opacity-5 my-2">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Registry
+                                Plate Code</label>
+                            {{ form.license_plate(class="form-control", placeholder="LHR-1234") }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Propulsion
+                                System</label>
+                            {{ form.fuel_type(class="form-control", placeholder="Diesel, Electric...") }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Max Payload
+                                Mass (kg)</label>
+                            {{ form.capacity_kg(class="form-control" + (" is-invalid" if form.capacity_kg.errors else
+                            ""), placeholder="0.0") }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Volumetric
+                                Displacement (m³)</label>
+                            {{ form.capacity_vol(class="form-control", placeholder="0.0") }}
+                        </div>
+                    </div>
+
+                    <div class="mt-5 pt-4 border-top border-white border-opacity-5 d-flex gap-3">
+                        <button type="submit" class="btn btn-primary px-5 py-3 shadow-lg">
+                            <i class="fas fa-plus me-2"></i>Provision Asset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3">
+                    <i class="fas fa-shield-halved text-info"></i>
+                </div>
+                <h6 class="fw-bold text-heading mb-0 small">Provisioning Protocol</h6>
+            </div>
+            <ul class="list-unstyled mb-0">
+                <li class="d-flex mb-3">
+                    <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
+                    <div class="x-small text-body opacity-75"><strong>Indexing:</strong> System ID must be unique in the
+                        hardware registry.</div>
+                </li>
+                <li class="d-flex mb-3">
+                    <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
+                    <div class="x-small text-body opacity-75"><strong>Load Solver:</strong> Payload mass affects AI
+                        routing cost calculations.</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

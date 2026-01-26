@@ -1,152 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Logistics AI{% endblock %}</title>
-    
+
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    
+
     <style>
         :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --accent: #4895ef;
-            --dark-bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-light: #f8fafc;
-            --text-gray: #94a3b8;
+            --sidebar-width: 280px;
+            --brand-primary: #3b82f6;
+            --brand-secondary: #2563eb;
+            --bg-base: #050b18;
+            --bg-surface: rgba(15, 23, 42, 0.8);
+            --bg-sidebar: #050b18;
+            --border-default: rgba(255, 255, 255, 0.05);
+            --text-heading: #f8fafc;
+            --text-body: #94a3b8;
+            --accent-info: #0ea5e9;
+            --input-bg: rgba(15, 23, 42, 0.4);
+            --glass-blur: blur(12px);
         }
-        
+
         body {
-            background-color: var(--dark-bg);
-            color: var(--text-light);
-            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(37, 99, 235, 0.08) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+            color: var(--text-body);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
         }
-        
-        .navbar {
-            background-color: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #0f172a 0%, #050b18 100%);
+            position: fixed;
+            left: 0;
+            top: 0;
+            border-right: 1px solid var(--border-default);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        .navbar-dark .navbar-nav .nav-link {
-            color: rgba(255,255,255,0.8);
-            transition: color 0.3s;
+
+        .brand-container {
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 4rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        
-        .navbar-dark .navbar-nav .nav-link:hover,
-        .navbar-dark .navbar-nav .nav-link.active {
-            color: var(--primary);
+
+        .brand-text {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--text-heading);
+            letter-spacing: -1.5px;
+            margin: 0;
         }
-        
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.85rem 1.25rem;
+            color: var(--text-body);
+            text-decoration: none !important;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .nav-link i {
+            width: 20px;
+            font-size: 1.1rem;
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link:hover i {
+            opacity: 1;
+            color: var(--brand-primary);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
             border: none;
+        }
+
+        .nav-link.active i {
+            opacity: 1;
+            color: #fff;
+        }
+
+        /* Main Viewport */
+        .viewport {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 3.5rem;
+        }
+
+        /* Glass Cards */
+        .card {
+            background: var(--bg-surface);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-default);
+            border-radius: 24px;
+            padding: 1.5rem;
             transition: all 0.3s ease;
         }
-        
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Forms */
+        .form-control,
+        .form-select {
+            background-color: var(--input-bg) !important;
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-default) !important;
+            color: var(--text-heading) !important;
+            border-radius: 14px !important;
+            padding: 0.85rem 1.1rem !important;
+            font-size: 0.95rem !important;
+            transition: all 0.2s !important;
+        }
+
+        .form-control::placeholder {
+            color: rgba(148, 163, 184, 0.4);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: rgba(15, 23, 42, 0.7) !important;
+            border-color: var(--brand-primary) !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+            outline: none !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+            border: none;
+            border-radius: 14px;
+            padding: 0.9rem 1.8rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
+        }
+
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
+            filter: brightness(1.1);
         }
-        
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-default);
+            border-radius: 14px;
+            padding: 0.9rem 1.8rem;
+            color: #fff;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Tables Enhancements */
         .table {
-            color: var(--text-light);
+            color: var(--text-body);
+            width: 100%;
         }
-        
-        .table thead {
-            border-color: rgba(255,255,255,0.1);
+
+        .table th {
+            color: var(--text-heading) !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid var(--border-default) !important;
+            padding: 1.5rem 1rem !important;
         }
-        
-        .table tbody {
-            border-color: rgba(255,255,255,0.05);
+
+        .table td {
+            background: transparent !important;
+            border-bottom: 1px solid var(--border-default) !important;
+            padding: 1.25rem 1rem !important;
+            vertical-align: middle;
+            color: var(--text-body) !important;
         }
-        
-        .alert {
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .section-header h2 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            color: var(--text-heading) !important;
+        }
+
+        .text-heading {
+            color: var(--text-heading) !important;
+        }
+
+        .text-body {
+            color: var(--text-body) !important;
+        }
+
+        .x-small {
+            font-size: 0.7rem !important;
+            letter-spacing: 0.5px;
+        }
+
+        .small {
+            font-size: 0.85rem !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
             border-radius: 10px;
-            border: none;
         }
     </style>
-    
+
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold" href="{{ url_for('main.dashboard') }}">
-                <i class="fas fa-truck-fast me-2 text-primary"></i>Logistics<span class="text-primary">AI</span>
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('orders.list_orders') }}">
-                            <i class="fas fa-box me-1"></i>Orders
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('vehicles.list_vehicles') }}">
-                            <i class="fas fa-truck me-1"></i>Fleet
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <a href="{{ url_for('main.dashboard') }}" class="brand-container">
+            <div class="bg-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm"
+                style="width: 32px; height: 32px;">
+                <i class="fas fa-layer-group text-white small"></i>
             </div>
-        </div>
-    </nav>
-    
-    <!-- Main Content -->
-    <div class="container-fluid px-4" style="margin-top: 80px;">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <h1 class="brand-text">Logistics<span class="text-primary">OS</span></h1>
+        </a>
+
+        <ul class="nav-list">
+            <li>
+                <a href="{{ url_for('main.dashboard') }}"
+                    class="nav-link {% if segment == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i><span>Intelligence Hub</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('orders.list_orders') }}"
+                    class="nav-link {% if segment == 'orders' %}active{% endif %}">
+                    <i class="fas fa-globe"></i><span>Global Orders</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('vehicles.list_vehicles') }}"
+                    class="nav-link {% if segment == 'vehicles' %}active{% endif %}">
+                    <i class="fas fa-truck-fast"></i><span>Fleet Management</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('main.tracking') }}"
+                    class="nav-link {% if segment == 'telemetry' %}active{% endif %}">
+                    <i class="fas fa-satellite-dish"></i><span>Live Telemetry</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('main.delivery_prediction') }}"
+                    class="nav-link {% if segment == 'prediction' %}active{% endif %}">
+                    <i class="fas fa-brain"></i><span>AI Forecasting</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('main.bin_packing') }}"
+                    class="nav-link {% if segment == 'bin_packing' %}active{% endif %}">
+                    <i class="fas fa-boxes-stacked"></i><span>Load Optimizer</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('main.model_comparison') }}"
+                    class="nav-link {% if segment == 'ml_comparison' %}active{% endif %}">
+                    <i class="fas fa-chart-column"></i><span>Model Benchmark</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('main.multi_depot') }}"
+                    class="nav-link {% if segment == 'multi_depot' %}active{% endif %}">
+                    <i class="fas fa-project-diagram"></i><span>Multi-Depot Optimizer</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('main.scenario_analysis') }}"
+                    class="nav-link {% if segment == 'scenario' %}active{% endif %}">
+                    <i class="fas fa-bolt"></i><span>Scenario Analysis</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="mt-auto pt-4 border-top border-white border-opacity-5">
+            <div class="d-flex align-items-center gap-3 mb-4 px-2">
+                <img src="https://ui-avatars.com/api/?name={{ current_user.username }}&background=3b82f6&color=fff"
+                    class="rounded-circle shadow-sm" style="width: 32px;">
+                <div class="overflow-hidden">
+                    <div class="text-heading small fw-bold text-truncate">{{ current_user.username }}</div>
+                    <div class="text-body x-small opacity-50 text-truncate">{{
+                        current_user.role|default('Administrator') }}
                     </div>
-                {% endfor %}
-            {% endif %}
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-link text-danger opacity-75">
+                <i class="fas fa-power-off"></i><span>Terminate Session</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="viewport">
+        <!-- Flash Messages -->
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show border-0 shadow-sm mb-4" role="alert"
+            style="border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: #fff;">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
-        
+
         {% block content %}{% endblock %}
-    </div>
-    
+    </main>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

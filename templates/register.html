@@ -1,220 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Logistics AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Protocol Enrollment - Logistics AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --dark-bg: #0f172a;
-            --card-bg: #1e293b;
+            --brand-primary: #4361ee;
+            --brand-secondary: #3f37c9;
+            --bg-deep: #050b18;
+            --bg-surface: rgba(15, 23, 42, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-heading: #f8fafc;
+            --text-body: #94a3b8;
         }
-        
+
         body {
-            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e1b4b 100%);
-            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(67, 97, 238, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(63, 55, 201, 0.1) 0%, transparent 40%);
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0;
             padding: 40px 20px;
         }
-        
-        .register-container {
-            max-width: 600px;
+
+        .auth-gate-container {
+            position: relative;
+            max-width: 680px;
             width: 100%;
+            z-index: 10;
         }
-        
-        .register-card {
-            background-color: var(--card-bg);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
+
+        .auth-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 28px;
+            padding: 48px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
         }
-        
-        .brand-logo {
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--brand-primary), transparent);
+        }
+
+        .brand-cluster {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
-        
-        .brand-logo h1 {
-            color: #fff;
+
+        .brand-cluster i {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #fff, var(--brand-primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .brand-cluster h2 {
+            color: var(--text-heading);
             font-weight: 700;
-            margin: 0;
-            font-size: 1.8rem;
+            letter-spacing: -1.5px;
+            margin-bottom: 0.5rem;
         }
-        
-        .brand-logo .highlight {
-            color: var(--primary);
-        }
-        
-        .form-control, .form-select {
-            background-color: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 10px;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background-color: rgba(255,255,255,0.08);
-            border-color: var(--primary);
-            color: #fff;
-            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
-        }
-        
-        .form-select option {
-            background-color: var(--card-bg);
-            color: #fff;
-        }
-        
-        .form-control::placeholder {
-            color: rgba(255,255,255,0.4);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
-            padding: 12px;
-            font-weight: 600;
-            border-radius: 10px;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
-        }
-        
-        .form-label {
-            color: rgba(255,255,255,0.8);
-            font-size: 0.9rem;
-            margin-bottom: 6px;
-        }
-        
-        .alert {
-            border-radius: 10px;
-            border: none;
-        }
-        
-        .link-primary {
-            color: var(--primary);
-            text-decoration: none;
-        }
-        
-        .link-primary:hover {
-            color: #5a75ff;
-        }
-        
-        .text-danger {
+
+        .brand-cluster p {
             font-size: 0.85rem;
+            color: var(--text-body);
+        }
+
+        .form-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-body);
+            opacity: 0.8;
+            margin-bottom: 0.6rem;
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            color: #fff !important;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+        }
+
+        .form-select option {
+            background-color: #0f172a;
+            color: #fff;
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+            border: none;
+            padding: 14px;
+            font-weight: 700;
+            color: white;
+            border-radius: 14px;
+            width: 100%;
+            margin-top: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(67, 97, 238, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .auth-footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-glass);
+            text-align: center;
+        }
+
+        .auth-footer a {
+            color: var(--brand-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .alert-futuristic {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            padding: 1rem;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0);
+            background-size: 50px 50px;
+            z-index: 1;
         }
     </style>
 </head>
+
 <body>
-    <div class="register-container">
-        <div class="register-card">
-            <div class="brand-logo">
-                <h1><i class="fas fa-truck-fast me-2"></i>Logistics<span class="highlight">AI</span></h1>
-                <p class="text-muted mb-0">Create Your Account</p>
+    <div class="bg-grid"></div>
+
+    <div class="auth-gate-container">
+        <div class="auth-card">
+            <div class="brand-cluster">
+                <i class="fas fa-user-shield"></i>
+                <h2>NETWORK ENROLLMENT</h2>
+                <p>Establishing secure personnel node in Logistics AI ecosystem.</p>
             </div>
-            
+
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-futuristic alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-triangle-exclamation me-2"></i> {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
             {% endwith %}
-            
+
             <form method="POST" action="{{ url_for('auth.register') }}">
                 {{ form.hidden_tag() }}
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="username" class="form-label">{{ form.username.label }}</label>
-                        {{ form.username(class="form-control", placeholder="Username") }}
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Identifier (Username)</label>
+                        {{ form.username(class="form-control", placeholder="System Handle", autocomplete="off") }}
                         {% if form.username.errors %}
-                            <div class="text-danger mt-1">{{ form.username.errors[0] }}</div>
+                        <div class="text-danger x-small mt-2 ps-1">{{ form.username.errors[0] }}</div>
                         {% endif %}
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label for="email" class="form-label">{{ form.email.label }}</label>
-                        {{ form.email(class="form-control", placeholder="Email address") }}
+
+                    <div class="col-md-6">
+                        <label class="form-label">Registry Email</label>
+                        {{ form.email(class="form-control", placeholder="node@enterprise.com") }}
                         {% if form.email.errors %}
-                            <div class="text-danger mt-1">{{ form.email.errors[0] }}</div>
+                        <div class="text-danger x-small mt-2 ps-1">{{ form.email.errors[0] }}</div>
                         {% endif %}
                     </div>
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="full_name" class="form-label">{{ form.full_name.label }}</label>
-                        {{ form.full_name(class="form-control", placeholder="Full Name") }}
+
+                <div class="row g-4 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label">Full Personnel Name</label>
+                        {{ form.full_name(class="form-control", placeholder="Operator Name") }}
                         {% if form.full_name.errors %}
-                            <div class="text-danger mt-1">{{ form.full_name.errors[0] }}</div>
+                        <div class="text-danger x-small mt-2 ps-1">{{ form.full_name.errors[0] }}</div>
                         {% endif %}
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label for="phone" class="form-label">{{ form.phone.label }}</label>
-                        {{ form.phone(class="form-control", placeholder="Phone Number") }}
+
+                    <div class="col-md-6">
+                        <label class="form-label">Comm-Link (Phone)</label>
+                        {{ form.phone(class="form-control", placeholder="+X XXX-XXX-XXXX") }}
                         {% if form.phone.errors %}
-                            <div class="text-danger mt-1">{{ form.phone.errors[0] }}</div>
+                        <div class="text-danger x-small mt-2 ps-1">{{ form.phone.errors[0] }}</div>
                         {% endif %}
                     </div>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="role" class="form-label">{{ form.role.label }}</label>
+
+                <div class="mt-4">
+                    <label class="form-label">Operational Designation</label>
                     {{ form.role(class="form-select") }}
                     {% if form.role.errors %}
-                        <div class="text-danger mt-1">{{ form.role.errors[0] }}</div>
+                    <div class="text-danger x-small mt-2 ps-1">{{ form.role.errors[0] }}</div>
                     {% endif %}
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="password" class="form-label">{{ form.password.label }}</label>
-                        {{ form.password(class="form-control", placeholder="Password") }}
+
+                <div class="row g-4 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label">Passkey Secret</label>
+                        {{ form.password(class="form-control", placeholder="Pattern A") }}
                         {% if form.password.errors %}
-                            <div class="text-danger mt-1">{{ form.password.errors[0] }}</div>
+                        <div class="text-danger x-small mt-2 ps-1">{{ form.password.errors[0] }}</div>
                         {% endif %}
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <label for="confirm_password" class="form-label">{{ form.confirm_password.label }}</label>
-                        {{ form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+
+                    <div class="col-md-6">
+                        <label class="form-label">Re-verify Passkey</label>
+                        {{ form.confirm_password(class="form-control", placeholder="Pattern B") }}
                         {% if form.confirm_password.errors %}
-                            <div class="text-danger mt-1">{{ form.confirm_password.errors[0] }}</div>
+                        <div class="text-danger x-small mt-2 ps-1">{{ form.confirm_password.errors[0] }}</div>
                         {% endif %}
                     </div>
                 </div>
-                
-                <button type="submit" class="btn btn-primary mb-3 mt-2">
-                    <i class="fas fa-user-plus me-2"></i>Create Account
+
+                <button type="submit" class="btn btn-register">
+                    Initialize Protocol
                 </button>
-                
-                <div class="text-center">
-                    <p class="text-muted mb-0">Already have an account? 
-                        <a href="{{ url_for('auth.login') }}" class="link-primary">Login here</a>
-                    </p>
+
+                <div class="auth-footer">
+                    <p class="x-small text-body mb-2">Identifier already exists in registry?</p>
+                    <a href="{{ url_for('auth.login') }}">
+                        Return to Access Portal <i class="fas fa-door-open ms-2"></i>
+                    </a>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

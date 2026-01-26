@@ -3,162 +3,196 @@
 {% block title %}Vehicle {{ vehicle.vehicle_id }} - Logistics AI{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="section-header">
     <div>
-        <h2 class="fw-bold mb-1">Vehicle Details</h2>
-        <p class="text-muted mb-0">{{ vehicle.vehicle_id }} - {{ vehicle.make }} {{ vehicle.model }}</p>
+        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Hardware
+            Telemetry</div>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">{{ vehicle.vehicle_id }} Profile</h2>
+        <p class="text-body mb-0 small">Technical specification and operational history for {{ vehicle.make }} {{
+            vehicle.model }}.</p>
     </div>
-    <a href="{{ url_for('vehicles.list_vehicles') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left me-2"></i>Back to Fleet
-    </a>
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('vehicles.list_vehicles') }}"
+            class="btn btn-secondary py-2 px-4 shadow-sm border-white border-opacity-10">
+            <i class="fas fa-arrow-left me-2"></i>Fleet Index
+        </a>
+    </div>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <!-- Vehicle Information -->
-        <div class="card mb-4">
-            <div class="card-header bg-transparent">
-                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Vehicle Information</h5>
+        <!-- Technical Specifications -->
+        <div class="card mb-4 overflow-hidden p-0">
+            <div
+                class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-heading small align-items-center d-flex">
+                    <i class="fas fa-microchip me-2 text-primary"></i>Technical Core
+                </h6>
+                {% set status_val = vehicle.status.value if vehicle.status.value is defined else str(vehicle.status) %}
+                {% if status_val == 'Available' %}
+                <span
+                    class="badge bg-success bg-opacity-10 text-success border-0 px-3 py-1 rounded-pill x-small fw-bold">Operational</span>
+                {% elif status_val == 'On Route' %}
+                <span
+                    class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-1 rounded-pill x-small fw-bold">Active
+                    Mission</span>
+                {% elif status_val == 'Maintenance' %}
+                <span
+                    class="badge bg-warning bg-opacity-10 text-warning border-0 px-3 py-1 rounded-pill x-small fw-bold">In
+                    Service</span>
+                {% else %}
+                <span
+                    class="badge bg-secondary bg-opacity-10 text-secondary border-0 px-3 py-1 rounded-pill x-small fw-bold">Offline</span>
+                {% endif %}
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="text-muted small">Vehicle ID</label>
-                        <p class="fw-bold">{{ vehicle.vehicle_id }}</p>
+            <div class="p-4">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Make & Model</div>
+                        <div class="text-heading fw-bold">{{ vehicle.make }} {{ vehicle.model }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Status</label>
-                        <p>
-                            {% set status_val = vehicle.status.value if vehicle.status.value is defined else str(vehicle.status) %}
-                            {% if status_val == 'Available' %}
-                                <span class="badge bg-success">{{ status_val }}</span>
-                            {% elif status_val == 'On Route' %}
-                                <span class="badge bg-info">{{ status_val }}</span>
-                            {% elif status_val == 'Maintenance' %}
-                                <span class="badge bg-warning">{{ status_val }}</span>
-                            {% else %}
-                                <span class="badge bg-secondary">{{ status_val }}</span>
-                            {% endif %}
-                        </p>
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Manufacturing Year</div>
+                        <div class="text-heading fw-bold text-primary">{{ vehicle.year or 'N/A' }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Make & Model</label>
-                        <p>{{ vehicle.make }} {{ vehicle.model }}</p>
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Hardware Class</div>
+                        <div class="text-heading fw-bold">{{ vehicle.type }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Year</label>
-                        <p>{{ vehicle.year or 'N/A' }}</p>
+
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Registry Code</div>
+                        <div class="text-heading fw-bold text-info">{{ vehicle.license_plate or 'N/A' }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Type</label>
-                        <p>{{ vehicle.type }}</p>
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Max Payload (kg)</div>
+                        <div class="text-heading fw-bold">{{ vehicle.capacity_kg|int }} kg</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">License Plate</label>
-                        <p>{{ vehicle.license_plate or 'N/A' }}</p>
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Volumetric Capacity</div>
+                        <div class="text-heading fw-bold">{{ vehicle.capacity_vol }} m³</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Weight Capacity</label>
-                        <p>{{ vehicle.capacity_kg }} kg</p>
+
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Propulsion System</div>
+                        <div class="text-heading fw-bold opacity-75">{{ vehicle.fuel_type or 'N/A' }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Volume Capacity</label>
-                        <p>{{ vehicle.capacity_vol }} m³</p>
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">System Odometer</div>
+                        <div class="text-heading fw-bold">{{ vehicle.mileage|int }} km</div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Fuel Type</label>
-                        <p>{{ vehicle.fuel_type or 'N/A' }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small">Mileage</label>
-                        <p>{{ vehicle.mileage or 0 }} km</p>
+                    <div class="col-md-4">
+                        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Hardware Instance ID</div>
+                        <div class="text-heading fw-bold opacity-50 x-small">{{ vehicle.id }}</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Routes -->
-        {% if routes %}
-        <div class="card">
-            <div class="card-header bg-transparent">
-                <h5 class="mb-0"><i class="fas fa-route me-2"></i>Recent Routes</h5>
+        <!-- Mission History -->
+        <div class="card p-0 overflow-hidden">
+            <div class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25">
+                <h6 class="fw-bold mb-0 text-heading small"><i class="fas fa-route me-2 text-warning"></i>Operational
+                    History</h6>
             </div>
-            <div class="card-body">
+            <div class="p-0">
+                {% if routes %}
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table mb-0">
                         <thead>
                             <tr>
-                                <th>Route ID</th>
-                                <th>Date</th>
-                                <th>Distance</th>
-                                <th>Status</th>
+                                <th>Session ID</th>
+                                <th>Timestamp</th>
+                                <th>Logistics Dist.</th>
+                                <th>Inference Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for route in routes %}
                             <tr>
-                                <td>{{ route.route_id }}</td>
-                                <td>{{ route.date.strftime('%Y-%m-%d') if route.date else 'N/A' }}</td>
-                                <td>{{ route.total_distance_km or 0 }} km</td>
+                                <td class="fw-bold text-heading">{{ route.route_id }}</td>
+                                <td class="small">{{ route.date.strftime('%Y-%m-%d') if route.date else 'N/A' }}</td>
+                                <td class="text-primary fw-bold">{{ route.total_distance_km|default(0)|round(1) }} km
+                                </td>
                                 <td>
-                                    <span class="badge bg-info">{{ route.status }}</span>
+                                    <span
+                                        class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill x-small fw-bold">ARCHIVED</span>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-        {% else %}
-        <div class="card">
-            <div class="card-body text-center py-4">
-                <i class="fas fa-route fa-3x text-muted mb-3"></i>
-                <p class="text-muted">No routes assigned to this vehicle yet.</p>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <div class="col-lg-4">
-        <!-- Maintenance -->
-        <div class="card mb-4">
-            <div class="card-header bg-transparent">
-                <h6 class="mb-0">Maintenance</h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="text-muted small">Last Maintenance</label>
-                    <p>{{ vehicle.last_maintenance.strftime('%Y-%m-%d') if vehicle.last_maintenance else 'N/A' }}</p>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted small">Next Maintenance</label>
-                    <p>{{ vehicle.next_maintenance.strftime('%Y-%m-%d') if vehicle.next_maintenance else 'N/A' }}</p>
-                </div>
-                {% if vehicle.next_maintenance %}
-                <div class="alert alert-warning small mb-0">
-                    <i class="fas fa-wrench me-2"></i>Maintenance due soon
+                {% else %}
+                <div class="text-center py-5 opacity-50">
+                    <i class="fas fa-map-marked-alt fa-3x mb-3 text-body opacity-25"></i>
+                    <p class="small mb-0">No active or archived mission logs for this asset.</p>
                 </div>
                 {% endif %}
             </div>
         </div>
+    </div>
 
-        <!-- Location -->
+    <div class="col-lg-4">
+        <!-- Maintenance Lifecycle -->
+        <div class="card mb-4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-warning bg-opacity-10 p-2 rounded-3 me-3">
+                    <i class="fas fa-wrench text-warning"></i>
+                </div>
+                <h6 class="fw-bold text-heading mb-0 small">Asset Integrity</h6>
+            </div>
+
+            <div class="mb-4">
+                <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Last Inspection Cycle</div>
+                <div class="text-heading fw-bold small">{{ vehicle.last_maintenance.strftime('%Y-%m-%d') if
+                    vehicle.last_maintenance else 'No historical record' }}</div>
+            </div>
+
+            <div class="mb-4">
+                <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1">Scheduled Recertification</div>
+                <div class="text-heading fw-bold small">{{ vehicle.next_maintenance.strftime('%Y-%m-%d') if
+                    vehicle.next_maintenance else 'Awaiting Scan' }}</div>
+            </div>
+
+            {% if vehicle.next_maintenance %}
+            <div class="bg-warning bg-opacity-10 border-start border-4 border-warning p-3 rounded-end-4 mb-0">
+                <div class="d-flex">
+                    <i class="fas fa-circle-exclamation text-warning me-3 mt-1"></i>
+                    <div class="x-small text-warning fw-bold">ASSET MAINTENANCE ADVISORY: System recertification is
+                        pending for the next operational window.</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Geospatial Overlay -->
         {% if vehicle.current_location_lat and vehicle.current_location_lon %}
         <div class="card">
-            <div class="card-header bg-transparent">
-                <h6 class="mb-0">Current Location</h6>
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                    <i class="fas fa-location-crosshairs text-primary"></i>
+                </div>
+                <h6 class="fw-bold text-heading mb-0 small">Live Tracking Node</h6>
             </div>
-            <div class="card-body">
-                <p class="small mb-2">
-                    <strong>Lat:</strong> {{ vehicle.current_location_lat }}<br>
-                    <strong>Lon:</strong> {{ vehicle.current_location_lon }}
-                </p>
-                <a href="https://www.google.com/maps?q={{ vehicle.current_location_lat }},{{ vehicle.current_location_lon }}" 
-                   target="_blank" class="btn btn-outline-primary btn-sm w-100">
-                    <i class="fas fa-map-marker-alt me-2"></i>View on Map
-                </a>
+
+            <div class="bg-dark bg-opacity-25 rounded-4 p-3 mb-4 border border-white border-opacity-5">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="x-small text-body opacity-50 mb-1">Latitude</div>
+                        <div class="text-heading small fw-bold">{{ vehicle.current_location_lat|round(4) }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="x-small text-body opacity-50 mb-1">Longitude</div>
+                        <div class="text-heading small fw-bold">{{ vehicle.current_location_lon|round(4) }}</div>
+                    </div>
+                </div>
             </div>
+
+            <a href="https://www.google.com/maps?q={{ vehicle.current_location_lat }},{{ vehicle.current_location_lon }}"
+                target="_blank" class="btn btn-secondary w-100 py-3 small fw-bold">
+                <i class="fas fa-map-pin me-2 text-primary"></i>Inspect Network Node
+            </a>
         </div>
         {% endif %}
     </div>

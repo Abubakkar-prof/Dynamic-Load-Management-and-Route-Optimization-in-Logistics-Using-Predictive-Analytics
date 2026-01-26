@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Create Order - Logistics AI{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">New Logistics Order</h2>
+        <p class="text-body mb-0 small">Enter shipment details to generate a new dispatch request.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <form method="POST" action="{{ url_for('orders.create_order') }}">
+
+                <div class="row g-4 mb-4">
+                    <div class="col-12">
+                        <h6 class="text-uppercase text-body x-small fw-bold mb-3">Customer Information</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-body x-small">Order ID</label>
+                        <input type="text" name="order_id" class="form-control" placeholder="ORD-YYYY-XXXX" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-body x-small">Customer Name</label>
+                        <input type="text" name="customer_name" class="form-control" placeholder="Acme Corp" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-body x-small">Delivery Address</label>
+                        <input type="text" name="delivery_address" class="form-control"
+                            placeholder="123 Logistics Way, Sector 5..." required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-body x-small">Latitude</label>
+                        <input type="number" step="any" name="latitude" class="form-control" placeholder="31.5204"
+                            required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-body x-small">Longitude</label>
+                        <input type="number" step="any" name="longitude" class="form-control" placeholder="74.3587"
+                            required>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4 pt-4 border-top border-white border-opacity-5">
+                    <div class="col-12">
+                        <h6 class="text-uppercase text-body x-small fw-bold mb-3">Shipment Specs</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-body x-small">Weight (kg)</label>
+                        <input type="number" step="0.1" name="weight_kg" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-body x-small">Volume (m³)</label>
+                        <input type="number" step="0.1" name="volume_m3" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-body x-small">Window Start (Hr)</label>
+                        <input type="number" min="0" max="23" name="time_window_start" class="form-control" value="9">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-body x-small">Window End (Hr)</label>
+                        <input type="number" min="0" max="23" name="time_window_end" class="form-control" value="17">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-body x-small">Service Time (min)</label>
+                        <input type="number" name="service_time" class="form-control" value="15">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 pt-3">
+                    <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <i class="fas fa-check me-2"></i>Create Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

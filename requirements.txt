@@ -6,6 +6,7 @@ flask-wtf==1.2.1
 flask-migrate==4.0.5
 flask-cors==4.0.0
 flask-mail==0.9.1
+flask-socketio==5.3.6
 
 # Database
 psycopg2-binary==2.9.9
