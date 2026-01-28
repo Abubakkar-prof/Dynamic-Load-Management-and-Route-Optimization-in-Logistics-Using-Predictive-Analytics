@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from src.persistence.models import db, Vehicle, Route, Order, OrderStatus, VehicleStatus
 
 # Configuration
-DB_URL = "sqlite:///logistics.db"
+DB_URL = "sqlite:///instance/logistics.db"
 API_URL = "http://localhost:5000/api/update_location"  # Or use SocketIO client
 SOCKET_EMIT_URL = (
     "http://localhost:5000/tracking/api/broadcast"  # Custom endpoint for simulation
@@ -62,7 +62,7 @@ def run_simulation():
             active_routes = session.query(Route).filter(Route.status == "Active").all()
 
             if not active_routes:
-                # print("No active routes found. Waiting...")
+                print("No active routes found. Waiting...")
                 time.sleep(5)
                 session.commit()  # Refresh
                 continue
@@ -99,6 +99,7 @@ def run_simulation():
 
                 vehicle.current_location_lat = new_pos[0]
                 vehicle.current_location_lon = new_pos[1]
+                print(f"Vehicle {vehicle.vehicle_id} moved to: {new_pos}")
 
                 if reached:
                     print(
@@ -134,7 +135,7 @@ def run_simulation():
                         timeout=1,
                     )
                 except Exception as e:
-                    # print(f"Broadcast failed: {e}")
+                    print(f"Broadcast failed: {e}")
                     pass
 
             session.commit()

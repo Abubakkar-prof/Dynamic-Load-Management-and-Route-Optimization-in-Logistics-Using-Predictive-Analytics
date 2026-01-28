@@ -101,11 +101,17 @@
                         <div class="x-small text-body opacity-50 fw-bold">{{ route.date.strftime('%Y-%m-%d') if
                             route.date else 'TBD' }}</div>
                     </td>
-                    <td class="pe-4 py-3 text-end">
+                    <td class="pe-4 py-3 text-end d-flex gap-2 justify-content-end">
                         <a href="{{ url_for('optimization.view_route', route_id=route.id) }}"
                             class="btn btn-secondary btn-sm rounded-3 px-3 py-2 border-white border-opacity-10">
                             <i class="fas fa-magnifying-glass-location me-2 text-primary"></i>Inspect
                         </a>
+                        {% if route.status == 'Planned' %}
+                        <button onclick="activateRoute({{ route.id }})"
+                            class="btn btn-success btn-sm rounded-3 px-3 py-2 border-white border-opacity-10">
+                            <i class="fas fa-play me-2"></i>Start
+                        </button>
+                        {% endif %}
                     </td>
                 </tr>
                 {% else %}
@@ -151,6 +157,36 @@
             })
             .catch(err => {
                 alert('Hardware Error: ' + err);
+            })
+            .finally(() => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            });
+    }
+
+    function activateRoute(routeId) {
+        if (!confirm('Authorize hardware deployment and initiate GPS broadcast for this route?')) return;
+
+        const btn = event.currentTarget || event.target;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        fetch('/optimization/api/activate-route', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ route_id: routeId })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(`Activation Failed: ${data.error}`);
+                }
+            })
+            .catch(err => {
+                alert('Connection Error: ' + err);
             })
             .finally(() => {
                 btn.innerHTML = originalContent;

@@ -5,10 +5,10 @@
 {% block content %}
 <div class="section-header">
     <div>
-        <div class="x-small text-body opacity-50 fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Logistics
+        <div class="x-small text-white opacity-75 fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Logistics
             Intake</div>
-        <h2 class="fw-bold text-heading mb-1" style="letter-spacing: -1px;">Initiate New Dispatch</h2>
-        <p class="text-body mb-0 small">Register a new geospatial mission node into the global routing network.</p>
+        <h2 class="fw-bold text-white mb-1" style="letter-spacing: -1px;">Initiate New Dispatch</h2>
+        <p class="text-white mb-0 small">Register a new geospatial mission node into the global routing network.</p>
     </div>
     <div class="d-flex gap-3">
         <a href="{{ url_for('orders.list_orders') }}"
@@ -22,8 +22,8 @@
     <div class="col-lg-8">
         <div class="card p-0 overflow-hidden">
             <div class="px-4 py-3 border-bottom border-white border-opacity-5 bg-dark bg-opacity-25">
-                <h6 class="fw-bold mb-0 text-heading small"><i
-                        class="fas fa-file-signature me-2 text-primary"></i>Mission Manifest</h6>
+                <h6 class="fw-bold mb-0 text-white small"><i class="fas fa-file-signature me-2 text-primary"></i>Mission
+                    Manifest</h6>
             </div>
             <div class="p-4">
                 <form method="POST" action="{{ url_for('orders.create_order') }}">
@@ -31,7 +31,7 @@
 
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">System
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">System
                                 Identifier</label>
                             {{ form.order_id(class="form-control" + (" is-invalid" if form.order_id.errors else ""),
                             placeholder="ORD-XXXXX") }}
@@ -41,7 +41,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Geospatial
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Geospatial
                                 Cluster</label>
                             {{ form.region(class="form-select" + (" is-invalid" if form.region.errors else "")) }}
                             {% if form.region.errors %}
@@ -54,7 +54,7 @@
                         </div>
 
                         <div class="col-md-12">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Full
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Full
                                 Stakeholder Name</label>
                             {{ form.customer_name(class="form-control" + (" is-invalid" if form.customer_name.errors
                             else ""), placeholder="Legal or Corporate Name") }}
@@ -65,7 +65,7 @@
 
                         <div class="col-md-6">
                             <label
-                                class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Communication
+                                class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Communication
                                 Node (Phone)</label>
                             {{ form.customer_phone(class="form-control" + (" is-invalid" if form.customer_phone.errors
                             else ""), placeholder="+1 (000) 000-0000") }}
@@ -75,7 +75,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Electronic
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Electronic
                                 Registry (Email)</label>
                             {{ form.customer_email(class="form-control" + (" is-invalid" if form.customer_email.errors
                             else ""), placeholder="registry@domain.com") }}
@@ -85,7 +85,7 @@
                         </div>
 
                         <div class="col-md-12">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Destination
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Destination
                                 Geospatial Address</label>
                             {{ form.delivery_address(class="form-control" + (" is-invalid" if
                             form.delivery_address.errors else ""), rows=2, placeholder="Full physical delivery
@@ -100,45 +100,45 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Mass
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Mass
                                 (kg)</label>
                             {{ form.weight_kg(class="form-control" + (" is-invalid" if form.weight_kg.errors else ""),
                             placeholder="0.0") }}
                         </div>
 
                         <div class="col-md-4">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Vol.
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Vol.
                                 Displacement (m³)</label>
                             {{ form.volume_m3(class="form-control" + (" is-invalid" if form.volume_m3.errors else ""),
                             placeholder="0.0") }}
                         </div>
 
                         <div class="col-md-4">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Mission
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Mission
                                 Priority</label>
                             {{ form.priority(class="form-control" + (" is-invalid" if form.priority.errors else "")) }}
                         </div>
 
                         <div class="col-md-4">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Latitude
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Latitude
                                 Override</label>
                             {{ form.latitude(class="form-control", placeholder="0.0000") }}
                         </div>
 
                         <div class="col-md-4">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Longitude
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Longitude
                                 Override</label>
                             {{ form.longitude(class="form-control", placeholder="0.0000") }}
                         </div>
 
                         <div class="col-md-4">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Service
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Service
                                 Deadline (HRS)</label>
                             {{ form.deadline_hour(class="form-control", placeholder="24") }}
                         </div>
 
                         <div class="col-md-12">
-                            <label class="x-small text-body opacity-50 fw-bold text-uppercase mb-2 d-block">Operational
+                            <label class="x-small text-white opacity-75 fw-bold text-uppercase mb-2 d-block">Operational
                                 Directives (Notes)</label>
                             {{ form.delivery_notes(class="form-control", rows=2, placeholder="Special terminal
                             instructions...") }}
@@ -163,27 +163,28 @@
                 <div class="bg-info bg-opacity-10 p-2 rounded-3 me-3">
                     <i class="fas fa-lightbulb text-info"></i>
                 </div>
-                <h6 class="fw-bold text-heading mb-0 small">Dispatch Advisory</h6>
+                <h6 class="fw-bold text-white mb-0 small">Dispatch Advisory</h6>
             </div>
             <ul class="list-unstyled mb-0">
                 <li class="d-flex mb-3">
                     <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
-                    <div class="x-small text-body opacity-75"><strong>Collision Check:</strong> System ID must be unique
+                    <div class="x-small text-white opacity-75"><strong>Collision Check:</strong> System ID must be
+                        unique
                         to prevent manifest overlap.</div>
                 </li>
                 <li class="d-flex mb-3">
                     <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
-                    <div class="x-small text-body opacity-75"><strong>Routing Cost:</strong> Mass and Volume are
+                    <div class="x-small text-white opacity-75"><strong>Routing Cost:</strong> Mass and Volume are
                         critical for AI payload calculation.</div>
                 </li>
                 <li class="d-flex mb-3">
                     <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
-                    <div class="x-small text-body opacity-75"><strong>SLA Adherence:</strong> Higher priority missions
+                    <div class="x-small text-white opacity-75"><strong>SLA Adherence:</strong> Higher priority missions
                         are prioritized in the solver.</div>
                 </li>
                 <li class="d-flex">
                     <div class="me-3 mt-1"><i class="fas fa-circle-check text-primary x-small"></i></div>
-                    <div class="x-small text-body opacity-75"><strong>GPS Accuracy:</strong> Manual coordinates will
+                    <div class="x-small text-white opacity-75"><strong>GPS Accuracy:</strong> Manual coordinates will
                         bypass auto-geocoding.</div>
                 </li>
             </ul>
@@ -192,10 +193,10 @@
         <div class="card text-center py-5">
             <div
                 class="bg-dark bg-opacity-25 rounded-circle d-inline-flex p-4 mb-4 border border-white border-opacity-5 mx-auto">
-                <i class="fas fa-shield-halved fa-3x text-body opacity-25"></i>
+                <i class="fas fa-shield-halved fa-3x text-white opacity-25"></i>
             </div>
-            <h6 class="text-heading fw-bold small">Enterprise Security</h6>
-            <p class="text-body x-small mx-auto opacity-50 px-4">All dispatch entries are cryptographically logged and
+            <h6 class="text-white fw-bold small">Enterprise Security</h6>
+            <p class="text-white x-small mx-auto opacity-50 px-4">All dispatch entries are cryptographically logged and
                 tracked for hardware audit trails.</p>
         </div>
     </div>

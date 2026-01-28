@@ -237,6 +237,7 @@
 
         if (markers[vehicle_id]) {
             markers[vehicle_id].setLatLng([lat, lng]);
+            markers[vehicle_id].getPopup().setContent(`<strong>Vehicle: ${vehicle_id}</strong><br>Status: ${status}`);
         } else {
             markers[vehicle_id] = L.marker([lat, lng], { icon: vehicleIcon })
                 .addTo(map)

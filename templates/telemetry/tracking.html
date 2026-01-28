@@ -100,13 +100,42 @@
             .catch(err => console.error(err));
     }
 
+    // Connect to Socket.io
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('Real-time Telemetry Connected');
+    });
+
+    socket.on('location_update', (data) => {
+        const { vehicle_id, lat, lng, status } = data;
+
+        // Update Marker
+        if (markers[vehicle_id]) {
+            markers[vehicle_id].setLatLng([lat, lng]);
+            markers[vehicle_id].getPopup().setContent(`<b>${vehicle_id}</b><br>Status: ${status}`);
+        }
+
+        // Update table status if it exists
+        const rows = document.querySelectorAll('#vehicle-list .text-heading');
+        rows.forEach(row => {
+            if (row.innerText.trim() === vehicle_id) {
+                const badge = row.nextElementSibling;
+                if (badge) {
+                    badge.innerText = status;
+                    badge.className = `badge bg-${status === 'On Route' ? 'success' : 'secondary'} bg-opacity-10 text-${status === 'On Route' ? 'success' : 'secondary'} x-small`;
+                }
+            }
+        });
+    });
+
     // Load vehicles on page load
     loadVehicles();
 
     // Refresh button
     document.getElementById('refresh-btn').addEventListener('click', loadVehicles);
 
-    // Auto-refresh every 5 seconds
-    setInterval(loadVehicles, 5000);
+    // Auto-refresh fallback (longer interval since we have sockets)
+    setInterval(loadVehicles, 30000);
 </script>
 {% endblock %}

@@ -104,12 +104,52 @@ def list_routes():
     return render_template("optimization/routes.html", routes=routes)
 
 
+@optimization_bp.route("/api/activate-route", methods=["POST"])
+@login_required
+def activate_route():
+    """Activate a planned route"""
+    data = request.json
+    route_id = data.get("route_id")
+
+    if not route_id:
+        return jsonify({"success": False, "error": "Missing route ID"}), 400
+
+    route = Route.query.get(route_id)
+    if not route:
+        return jsonify({"success": False, "error": "Route not found"}), 404
+
+    if route.status != "Planned":
+        return jsonify({"success": False, "error": f"Cannot activate route in {route.status} status"}), 400
+
+    try:
+        # Update route status
+        route.status = "Active"
+        route.start_time = datetime.now()
+
+        # Update vehicle status
+        vehicle = Vehicle.query.get(route.vehicle_id)
+        if vehicle:
+            vehicle.status = VehicleStatus.ON_ROUTE
+
+        # Update order statuses
+        for order in route.orders:
+            order.status = OrderStatus.IN_TRANSIT
+
+        db.session.commit()
+        return jsonify({"success": True, "message": "Route activated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @optimization_bp.route("/routes/<int:route_id>")
 @login_required
 def view_route(route_id):
     """View route details"""
+    # Try to find route_detail.html in various locations
     route = Route.query.get_or_404(route_id)
     route_steps = json.loads(route.route_json) if route.route_json else []
-    return render_template(
-        "optimization/route_detail.html", route=route, route_steps=route_steps
-    )
+    
+    # Check if we should use a generic view or if the template exists
+    template_path = "optimization/route_detail.html"
+    return render_template(template_path, route=route, route_steps=route_steps)
