@@ -142,6 +142,56 @@ def activate_route():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@optimization_bp.route("/api/reoptimize-route", methods=["POST"])
+@login_required
+def reoptimize_active_route():
+    """Dynamically re-calculate an active route from current vehicle position"""
+    data = request.json
+    route_id = data.get("route_id")
+    
+    route = Route.query.get(route_id)
+    if not route or route.status != "Active":
+        return jsonify({"success": False, "error": "Active route not found"}), 404
+        
+    vehicle = Vehicle.query.get(route.vehicle_id)
+    if not vehicle:
+         return jsonify({"success": False, "error": "Vehicle not found"}), 404
+
+    # Current position acts as the new "Depot"
+    current_loc = (vehicle.current_location_lat, vehicle.current_location_lon)
+    
+    # Get remaining orders
+    remaining_orders = [o for o in route.orders if o.status != OrderStatus.DELIVERED]
+    if not remaining_orders:
+        return jsonify({"success": True, "message": "No remaining stops to optimize"})
+
+    # Convert to DataFrame for optimizer
+    import pandas as pd
+    orders_df = pd.DataFrame([{
+        "order_id": o.order_id,
+        "latitude": o.latitude,
+        "longitude": o.longitude,
+        "weight_kg": o.weight_kg,
+        "volume_m3": o.volume_m3
+    } for o in remaining_orders])
+
+    from src.optimization.optimizer import LogisticsOptimizer
+    # We use a single vehicle (the current one)
+    fleet_info = [{"vehicle_id": vehicle.vehicle_id, "capacity_kg": vehicle.capacity_kg}]
+    
+    optimizer = LogisticsOptimizer(fleet_info, orders_df, depot_location=current_loc)
+    new_results = optimizer.optimize_routes()
+    
+    if new_results:
+        # Update Route JSON with new sequence
+        new_steps = new_results[0]["route"]
+        route.route_json = json.dumps(new_steps)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Route dynamically re-optimized from current location"})
+    
+    return jsonify({"success": False, "error": "Solver could not find a better path"})
+
+
 @optimization_bp.route("/routes/<int:route_id>")
 @login_required
 def view_route(route_id):

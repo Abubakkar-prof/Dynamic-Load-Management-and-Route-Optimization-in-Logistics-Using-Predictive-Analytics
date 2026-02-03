@@ -18,9 +18,12 @@ def vehicle_tracking():
         # Get current driver if assigned
         driver_name = None
         if vehicle.drivers:
-            driver = vehicle.drivers[0]  # Assuming one driver per vehicle
+            driver = vehicle.drivers[0]
             if driver.user:
                 driver_name = driver.user.full_name or driver.user.username
+
+        # Get active route if any
+        active_route = next((r.route_id for r in vehicle.routes if r.status == "Active"), None)
 
         vehicle_data.append(
             {
@@ -30,6 +33,7 @@ def vehicle_tracking():
                 "lon": vehicle.current_location_lon,
                 "status": vehicle.status.value,
                 "driver": driver_name,
+                "active_route": active_route,
                 "make": vehicle.make,
                 "model": vehicle.model,
             }

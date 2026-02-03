@@ -78,8 +78,9 @@ def run_simulation():
 
                 # Determine current target stop
                 current_stop_idx = getattr(vehicle, "_sim_stop_idx", 0)
+                print(f"Vehicle {vehicle.vehicle_id} | Route {route.route_id} | Stop {current_stop_idx}/{len(steps)}")
                 if current_stop_idx >= len(steps):
-                    print(f"Vehicle {vehicle.vehicle_id} completed its route.")
+                    print(f"Vehicle {vehicle.vehicle_id} completed its route (Index {current_stop_idx} >= Total {len(steps)}).")
                     route.status = "Completed"
                     vehicle.status = VehicleStatus.AVAILABLE
                     session.commit()
@@ -117,6 +118,10 @@ def run_simulation():
                         order.status = OrderStatus.DELIVERED
                         order.actual_delivery_time = datetime.utcnow()
 
+                # Calculate distance to next stop for proximity alerts
+                dist_to_target = haversine(new_pos, target_pos)
+                proximity_alert = dist_to_target < 0.5 # 500 meters
+
                 # Push update via SocketIO
                 try:
                     update_payload = {
@@ -126,8 +131,13 @@ def run_simulation():
                         "status": (
                             vehicle.status.value
                             if hasattr(vehicle.status, "value")
-                            else vehicle.status
+                            else str(vehicle.status)
                         ),
+                        "route_id": route.route_id,
+                        "distance_to_stop": round(dist_to_target, 2),
+                        "proximity_alert": proximity_alert,
+                        "next_stop_id": target_stop["order_id"],
+                        "route_steps": steps # Draw the planned path
                     }
                     requests.post(
                         "http://localhost:5000/api/broadcast_location",
@@ -142,7 +152,9 @@ def run_simulation():
             time.sleep(2)  # Simulation tick rate
 
         except Exception as e:
+            import traceback
             print(f"Simulation Error: {e}")
+            traceback.print_exc()
             session.rollback()
             time.sleep(5)
 

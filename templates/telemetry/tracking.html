@@ -92,7 +92,18 @@
 
                             markers[vehicle.vehicle_id] = L.marker([lat, lon], { icon: icon })
                                 .addTo(map)
-                                .bindPopup(`<b>${vehicle.vehicle_id}</b><br>Status: ${vehicle.status}`);
+                                .bindPopup(`
+                                    <b>${vehicle.vehicle_id}</b><br>
+                                    Status: ${vehicle.status}<br>
+                                    ${vehicle.active_route ? `
+                                    <div class="mt-2 border-top border-secondary border-opacity-10 pt-2">
+                                        <span class="text-primary x-small fw-bold">Route: ${vehicle.active_route}</span><br>
+                                        <div class="d-flex gap-1 mt-1">
+                                            <a href="/optimization/routes" class="btn btn-primary btn-sm py-1 px-2 text-white x-small" style="font-size:9px;">View</a>
+                                            <button onclick="reoptimizeRoute('${vehicle.active_route}')" class="btn btn-warning btn-sm py-1 px-2 text-dark x-small fw-bold" style="font-size:9px;">Recalculate</button>
+                                        </div>
+                                    </div>` : ''}
+                                `);
                         }
                     }
                 });
@@ -102,18 +113,49 @@
 
     // Connect to Socket.io
     const socket = io();
+    const routeLines = {};
 
     socket.on('connect', () => {
         console.log('Real-time Telemetry Connected');
     });
 
     socket.on('location_update', (data) => {
-        const { vehicle_id, lat, lng, status } = data;
+        const { vehicle_id, lat, lng, status, route_id, distance_to_stop, route_steps } = data;
+
+        // Draw/Update Planned Path
+        if (route_steps && route_steps.length > 0) {
+            const pathPoints = [[lat, lng]];
+            route_steps.forEach(step => pathPoints.push([step.latitude, step.longitude]));
+
+            if (routeLines[vehicle_id]) {
+                routeLines[vehicle_id].setLatLngs(pathPoints);
+            } else {
+                routeLines[vehicle_id] = L.polyline(pathPoints, {
+                    color: '#00d4ff', // Brighter Neon Blue
+                    weight: 4,
+                    opacity: 0.8,
+                    dashArray: '10, 10',
+                    lineJoin: 'round'
+                }).addTo(map);
+            }
+        }
 
         // Update Marker
         if (markers[vehicle_id]) {
             markers[vehicle_id].setLatLng([lat, lng]);
-            markers[vehicle_id].getPopup().setContent(`<b>${vehicle_id}</b><br>Status: ${status}`);
+            markers[vehicle_id].getPopup().setContent(`
+                <b>${vehicle_id}</b><br>
+                Status: ${status}<br>
+                ${distance_to_stop ? `<span class='text-body x-small'>Next Stop: ${distance_to_stop}km</span><br>` : ''}
+                ${route_id ? `
+                <div class="mt-2 border-top border-secondary border-opacity-10 pt-2">
+                    <span class="text-primary x-small fw-bold">Route: ${route_id}</span><br>
+                     <div class="d-flex gap-1 mt-1">
+                        <a href="/optimization/routes" class="btn btn-primary btn-sm py-1 px-2 text-white x-small" style="font-size:9px;">View</a>
+                        <button onclick="reoptimizeRoute('${route_id}')" class="btn btn-warning btn-sm py-1 px-2 text-dark x-small fw-bold" style="font-size:9px;">Recalculate</button>
+                    </div>
+                </div>` : ''}
+            `);
         }
 
         // Update table status if it exists
@@ -128,6 +170,30 @@
             }
         });
     });
+
+    function reoptimizeRoute(routeId) {
+        showToast('Processing', 'Recalculating optimal path from current GPS coordinates...', 'warning');
+        fetch('/optimization/api/reoptimize-route', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ route_id: routeId })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Success', data.message, 'success');
+                } else {
+                    showToast('Error', data.error, 'danger');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('System Error', 'Failed to reach optimization server', 'danger');
+            });
+    }
 
     // Load vehicles on page load
     loadVehicles();

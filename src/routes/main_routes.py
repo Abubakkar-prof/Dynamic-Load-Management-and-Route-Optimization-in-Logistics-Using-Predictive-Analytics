@@ -77,6 +77,24 @@ def bin_packing():
     return render_template("optimization/bin_packing.html")
 
 
+@main_bp.route("/driver/<vehicle_id>")
+def driver_portal(vehicle_id):
+    """Driver mobile portal view"""
+    vehicle = Vehicle.query.filter_by(vehicle_id=vehicle_id).first_or_404()
+    active_route = Route.query.filter_by(vehicle_id=vehicle.id, status="Active").first()
+    
+    current_stop = None
+    if active_route:
+        # In a real app, we'd track the current stop index in the DB
+        # For demo, we find the first non-delivered order
+        for order in active_route.orders:
+            if order.status != OrderStatus.DELIVERED:
+                current_stop = order
+                break
+                
+    return render_template("driver/mobile_view.html", vehicle=vehicle, route=active_route, stop=current_stop)
+
+
 @main_bp.route("/model_comparison")
 @login_required
 def model_comparison():
@@ -128,6 +146,21 @@ def get_stats():
 
     # Routes stats
     active_routes = Route.query.filter_by(status="Active").count()
+    
+    # ROI & Sustainability Calculations
+    completed_routes = Route.query.filter_by(status="Completed").all()
+    total_km_done = sum(r.total_distance_km or 0 for r in completed_routes)
+    
+    # Assumptions: 
+    # 1. Manual routes are 30% longer than AI optimized routes
+    # 2. Avg fuel efficiency is 8 km/L
+    # 3. Fuel price is 270 PKR/L
+    # 4. 1L Diesel = 2.68 kg CO2
+    
+    km_saved = total_km_done * 0.3
+    fuel_saved_l = km_saved / 8
+    pkr_saved = fuel_saved_l * 270
+    co2_saved_kg = fuel_saved_l * 2.68
 
     return jsonify(
         {
@@ -138,6 +171,9 @@ def get_stats():
             "pending_orders": pending_orders,
             "total_orders_today": total_orders_today,
             "active_routes": active_routes,
+            "pkr_saved": round(pkr_saved, 2),
+            "co2_saved": round(co2_saved_kg, 2),
+            "total_km_optimized": round(total_km_done, 2)
         }
     )
 

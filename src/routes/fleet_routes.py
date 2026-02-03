@@ -63,23 +63,23 @@ def view_vehicle(vehicle_id):
 def api_vehicles():
     """Get vehicles as JSON"""
     vehicles = Vehicle.query.all()
-    return jsonify(
-        [
-            {
-                "id": v.id,
-                "vehicle_id": v.vehicle_id,
-                "type": v.type,
-                "capacity_kg": v.capacity_kg,
-                "capacity_vol": v.capacity_vol,
-                "status": (
-                    v.status.value if hasattr(v.status, "value") else str(v.status)
-                ),
-                "current_location_lat": v.current_location_lat,
-                "current_location_lon": v.current_location_lon,
-            }
-            for v in vehicles
-        ]
-    )
+    data = []
+    for v in vehicles:
+        active_route = Route.query.filter_by(vehicle_id=v.id, status="Active").first()
+        data.append({
+            "id": v.id,
+            "vehicle_id": v.vehicle_id,
+            "type": v.type,
+            "capacity_kg": v.capacity_kg,
+            "capacity_vol": v.capacity_vol,
+            "status": (
+                v.status.value if hasattr(v.status, "value") else str(v.status)
+            ),
+            "current_location_lat": v.current_location_lat,
+            "current_location_lon": v.current_location_lon,
+            "active_route": active_route.route_id if active_route else None
+        })
+    return jsonify(data)
 
 
 # === DRIVER ROUTES ===

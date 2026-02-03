@@ -85,11 +85,19 @@ class LogisticsOptimizer:
         # 3. Create Routing Model
         routing = pywrapcp.RoutingModel(manager)
 
+        # Traffic Simulation Logic (Predictive)
+        from datetime import datetime
+        current_hour = datetime.now().hour
+        # Peak hours: 8-10 AM or 5-7 PM
+        is_rush_hour = (8 <= current_hour <= 10) or (17 <= current_hour <= 19)
+        traffic_multiplier = 1.6 if is_rush_hour else 1.0
+
         # 4. Define Distance Callback
         def distance_callback(from_index, to_index):
             from_node = manager.IndexToNode(from_index)
             to_node = manager.IndexToNode(to_index)
-            return data["distance_matrix"][from_node][to_node]
+            # Apply traffic penalty to distance costs during rush hour
+            return int(data["distance_matrix"][from_node][to_node] * traffic_multiplier)
 
         transit_callback_index = routing.RegisterTransitCallback(distance_callback)
         routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)

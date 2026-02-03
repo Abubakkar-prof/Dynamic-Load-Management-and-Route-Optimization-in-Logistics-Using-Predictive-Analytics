@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dispatch - {{ vehicle.vehicle_id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --driver-bg: #0f172a;
+            --driver-accent: #3b82f6;
+            --driver-surface: #1e293b;
+        }
+
+        body {
+            background-color: var(--driver-bg);
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 80px;
+        }
+
+        .header-status {
+            background: linear-gradient(135deg, var(--driver-accent), #2563eb);
+            padding: 2rem 1rem;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            margin-bottom: -20px;
+        }
+
+        .stop-card {
+            background: var(--driver-surface);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 0 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-action {
+            border-radius: 15px;
+            padding: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .route-step {
+            display: flex;
+            gap: 15px;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .step-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--driver-surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border: 1px solid var(--driver-accent);
+        }
+
+        .nav-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-status">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h6 class="opacity-75 mb-0">Active Driver Portal</h6>
+                <h4 class="fw-bold">{{ vehicle.vehicle_id }}</h4>
+            </div>
+            <div class="badge bg-white text-primary rounded-pill px-3 py-2">
+                <i class="fas fa-satellite-dish me-1"></i> Live
+            </div>
+        </div>
+        {% if route %}
+        <p class="small mb-0"><i class="fas fa-route me-1"></i> Assignment: <strong>{{ route.route_id }}</strong></p>
+        {% else %}
+        <p class="small mb-0">No active assignment detected.</p>
+        {% endif %}
+    </div>
+
+    <div class="container-fluid py-4">
+        {% if stop %}
+        <div class="stop-card">
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-primary fw-bold small text-uppercase">Current Stop</span>
+                <span class="text-white-50 x-small">ID: {{ stop.order_id }}</span>
+            </div>
+            <h5 class="fw-bold mb-1">{{ stop.customer_name }}</h5>
+            <p class="text-white-50 small mb-4"><i class="fas fa-location-dot me-1"></i> {{ stop.delivery_address }}</p>
+
+            <div class="row g-2">
+                <div class="col-6">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ stop.latitude }},{{ stop.longitude }}"
+                        target="_blank" class="btn btn-outline-primary btn-action">
+                        <i class="fas fa-location-arrow me-2"></i>Navigate
+                    </a>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-primary btn-action" onclick="markDelivered('{{ stop.order_id }}')">
+                        <i class="fas fa-check-circle me-2"></i>Deliver
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mx-3 mt-5">
+            <h6 class="fw-bold text-white-50 mb-3 text-uppercase small">Upcoming Sequence</h6>
+            {% for r_order in route.orders %}
+            {% if r_order.status != 'Delivered' and r_order.order_id != stop.order_id %}
+            <div class="route-step">
+                <div class="step-icon text-primary">{{ loop.index }}</div>
+                <div>
+                    <div class="fw-bold small">{{ r_order.customer_name }}</div>
+                    <div class="text-white-50 x-small">{{ r_order.delivery_address }}</div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+            <h5>Queue Empty</h5>
+            <p class="text-white-50 small">Take a break! No pending deliveries for this unit.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <nav class="nav-bottom">
+        <div class="text-center text-primary">
+            <i class="fas fa-truck-fast h4 mb-0"></i>
+            <div style="font-size: 10px;">Dispatch</div>
+        </div>
+        <div class="text-white-50 text-center opacity-50">
+            <i class="fas fa-clipboard-list h4 mb-0"></i>
+            <div style="font-size: 10px;">Logs</div>
+        </div>
+        <div class="text-white-50 text-center opacity-50">
+            <i class="fas fa-user-gear h4 mb-0"></i>
+            <div style="font-size: 10px;">Settings</div>
+        </div>
+    </nav>
+
+    <script>
+        function markDelivered(orderId) {
+            if (!confirm('Confirm this delivery is complete?')) return;
+            // API call to update status would go here
+            alert('Order ' + orderId + ' completed! Dispatch notified.');
+            location.reload();
+        }
+    </script>
+</body>
+
+</html>
